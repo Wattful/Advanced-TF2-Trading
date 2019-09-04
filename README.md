@@ -151,23 +151,23 @@ unaccepted         All effects that the bot will NOT create buy listings for. Ve
 ```
 
 # Build and Run
-In order to build and run the bot, navigate to the src directory.
-To build: 
+In order to build and run the bot, navigate to the src directory.  
+To build:   
 `javac -cp ../lib/*;. trading/*.java`
-To run:
+To run:  
 `java -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2" -cp ../lib/*;. trading.Main`
 
 # Troubleshooting
-Here are some errors you might experience.
-`Native offer checking stopped due to an error of type Not logged in`
-This error can occur when trying to respond to an offer. The best option is to simply restart the bot and try again.
-`javax.net.ssl.SSLHandshakeException: Received fatal alert: record_overflow`
-If this error (or a similar one) occurs, it means that you are running the programs without the recommended Djdk command line option seen above.
+Here are some errors you might experience.  
+`Native offer checking stopped due to an error of type Not logged in`  
+This error can occur when trying to respond to an offer. The best option is to simply restart the bot and try again.  
+`javax.net.ssl.SSLHandshakeException: Received fatal alert: record_overflow`  
+If this error (or a similar one) occurs, it means that you are running the programs without the recommended Djdk command line option seen above.  
 ```
 Exception in thread "main" java.lang.ExceptionInInitializerError
 Caused by: org.json.JSONException: A JSONArray text must start with '[' at 0 [character 1 line 1]
 ```
-This error (and similar ones) occur if the allHats or allListings json files are empty or are improperly formatted.
+This error (and similar ones) occur if the allHats or allListings json files are empty or are improperly formatted.  
 Instead of an empty file, have the file solely consist of an empty json array. (ie [] ).
 
 # Known issues
