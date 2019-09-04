@@ -14,10 +14,10 @@ const manager = new TradeOfferManager({
 });
 
 const config = {
-  username: "***REMOVED***",
-  password: "***REMOVED***",
-  sharedSecret: "***REMOVED***",
-  identitySecret: "***REMOVED***"
+  username: "",
+  password: "",
+  sharedSecret: "",
+  identitySecret: ""
 }
 
 const logOnOptions = {
