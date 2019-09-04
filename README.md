@@ -19,6 +19,18 @@ This bot trades Team Fortress 2 unusual hats. It does not work for any other ste
 
 # Setup
 Clone the repository. To use this bot, you must have a Steam account (obviously) and a Backpack.tf API key.
+### Node.js dependencies
+You must have [Node.js](https://nodejs.org/en/) installed on your computer and added to the PATH. Otherwise, the bot will crash and give an ambiguous error message.
+The Node.js portion of the bot has several dependencies.  
+To install these, first you must have [Node Package Manager](https://www.npmjs.com/) installed on your computer.  
+For each package, navigate to the src/trading folder and type `npm install <package>`, replacing `<package>` with the name of the package.
+Here are the dependencies:
+* steam-tradeoffer-manager
+* steam-user
+* steamcommunity
+* steam-totp
+* readline
+
 ### Config File
 The bot's config is located in Configuration.java.
 The config contains several constant values. By default, the values are empty.
@@ -163,6 +175,8 @@ Here are some errors you might experience.
 This error can occur when trying to respond to an offer. The best option is to simply restart the bot and try again.  
 `javax.net.ssl.SSLHandshakeException: Received fatal alert: record_overflow`  
 If this error (or a similar one) occurs, it means that you are running the programs without the recommended Djdk command line option seen above.  
+`java.lang.IllegalStateException: native offer checking has stopped working` immediately after starting the bot.
+If you get this error, this means that the Node.js portion of the program is not working. This could happen for several reasons. Firstly, you may not be running the program from the src directory. This can additionally happen if you have not installed all required NPM packages, or if you do not have Node.js installed and added to the Path. To get a more specific error message, try running node offerChecking.js yourself.
 ```
 Exception in thread "main" java.lang.ExceptionInInitializerError
 Caused by: org.json.JSONException: A JSONArray text must start with '[' at 0 [character 1 line 1]
