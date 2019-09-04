@@ -1,0 +1,31 @@
+Our items include:
+Unique,Mann Co. Supply Crate Key,0,7796011788, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7796011778, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7879934724, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7880069727, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7803074420, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7879934664, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7880069746, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7879934688, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7879934654, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7880069760, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7880069798, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7880069774, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7817056742, valued at 471
+Unique,Mann Co. Supply Crate Key,0,7817056674, valued at 471
+Unique,Refined Metal,0,7817056764, valued at 9
+Unique,Refined Metal,0,7817056777, valued at 9
+Unique,Refined Metal,0,7803074516, valued at 9
+Unique,Refined Metal,0,7796012197, valued at 9
+Unique,Refined Metal,0,7803074495, valued at 9
+Unique,Refined Metal,0,7796012017, valued at 9
+Unique,Refined Metal,0,7803074528, valued at 9
+Unique,Refined Metal,0,7817056778, valued at 9
+Unique,Refined Metal,0,7817056780, valued at 9
+
+Their items include:
+Unusual,Pirate Bandana,62,7520955798, valued at 6675
+
+Our value: 6675 Their value: 6675
+
+The offer with <PARTNER_ID> was accepted because our value was less than or equal to their value.
