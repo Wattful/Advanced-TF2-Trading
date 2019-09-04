@@ -31,7 +31,7 @@ Here are the dependencies:
 * steam-totp
 * readline
 
-### Config File
+### Java Config File
 The bot's config is located in Configuration.java.
 The config contains several constant values. By default, the values are empty.
 You **MUST** fill out the config for the bot to work.
@@ -48,6 +48,10 @@ BOT_ID             The bot's steamID64
 BOT_ID3            The bot's steamID3
 OWNER_ID           Optional value. The bot "owner's" steamID64. Any offers from the owner will be automatically accepted.
 ```
+### Offer Checking Config object
+In the offerChecking.js file, there is an object called config.
+You **MUST** fill out this object for the bot to work.
+The values in this config are the same as those in the java config.
 
 # Offer logic
 Upon receiving an offer, the bot calculates the total value of both sides of the proposed trade.
