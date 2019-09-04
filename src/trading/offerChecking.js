@@ -14,10 +14,10 @@ const manager = new TradeOfferManager({
 });
 
 const config = {
-  username: "JdoxEdgelordBot",
-  password: "InitialCapitol100",
-  sharedSecret: "rMUjmEw4Dsy09VcDGH5gSlH082w=",
-  identitySecret: "P0V5FpHbXbNq/2O4kXR77qE4je4="
+  username: "",
+  password: "",
+  sharedSecret: "",
+  identitySecret: ""
 }
 
 const logOnOptions = {
