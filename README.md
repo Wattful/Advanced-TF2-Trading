@@ -153,7 +153,7 @@ unaccepted         All effects that the bot will NOT create buy listings for. Ve
 # Build and Run
 In order to build and run the bot, navigate to the src directory.  
 To build:   
-`javac -cp ../lib/*;. trading/*.java`
+`javac -cp ../lib/*;. trading/*.java`  
 To run:  
 `java -Djdk.tls.client.protocols="TLSv1,TLSv1.1,TLSv1.2" -cp ../lib/*;. trading.Main`
 
