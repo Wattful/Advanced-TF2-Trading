@@ -1,8 +1,11 @@
+//TODO:
+
 const TradeOfferManager = require('steam-tradeoffer-manager');
 const SteamUser = require('steam-user');
 const SteamCommunity = require('steamcommunity');
 const SteamTotp = require('steam-totp');
 const ReadLine = require('readline');
+const config = require('config.json');
 
 const client = new SteamUser();
 const community = new SteamCommunity();
@@ -12,13 +15,6 @@ const manager = new TradeOfferManager({
   community: community,
   language: 'en'
 });
-
-const config = {
-  username: "",
-  password: "",
-  sharedSecret: "",
-  identitySecret: ""
-}
 
 const logOnOptions = {
   accountName: config.username,
@@ -59,10 +55,8 @@ function evaluateOffer(offer){
     io.question(JSON.stringify(offer) + "\n", function(response){
       if(response == "ACCEPT"){
         acceptOffer(offer);
-        //console.log("success");
       } else if(response == "DECLINE"){
         declineOffer(offer);
-        //console.log("success");
       } else if(response == "HOLD"){
         console.log("success");
       }
@@ -74,7 +68,6 @@ function acceptOffer(offer) {
   setTimeout(function(){
     offer.accept((err) => {
       if(err) {
-        console.log('There was an error accepting the offer.');
         console.log(err);
       } else {
         console.log('success'); 
