@@ -1,4 +1,7 @@
 # Advanced-TF2-Trading
+
+**I am currently making large changes to this repo, and as a result, this README no longer matches the code. Expect the docs to be updated by approximately February 22, 2021.**
+
 Java and node.js based Team Fortress 2 trading bot with backpack.tf API integration.
 
 This bot trades Team Fortress 2 unusual hats. It does not work for any other steam games, and it will not automatically trade items that are not unusual hats or TF2 currency.
