@@ -38,7 +38,7 @@ public class BuyListing extends Listing{
 	*/
 	public JSONObject getJSONRepresentation(){
 		JSONObject j = new JSONObject();
-		j.put("price", this.myPrice.getJSONRepresentation());
+		j.put("price", this.myPrice == null ? JSONObject.NULL : this.myPrice.getJSONRepresentation());
 		j.put("name", this.getName());
 		j.put("effect", this.getEffect().getIntValue());
 		j.put("communityPrice", this.getCommunityPrice().getJSONRepresentation());
@@ -108,7 +108,7 @@ public class BuyListing extends Listing{
 		String name = input.getString("name");
 		Effect effect = Effect.forInt(input.getInt("effect"));
 		PriceRange communityPrice = PriceRange.fromJSONRepresentation(input.getJSONObject("communityPrice"));
-		Price myPrice = Price.fromJSONRepresentation(input.getJSONObject("price"));
+		Price myPrice = input.isNull("price") ? null : Price.fromJSONRepresentation(input.getJSONObject("price"));
 		return new BuyListing(name, effect, communityPrice, myPrice);
 	}
 

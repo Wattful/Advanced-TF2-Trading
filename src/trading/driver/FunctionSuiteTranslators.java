@@ -33,12 +33,13 @@ class FunctionSuiteTranslators{
 	/**Returns a ListingDescrptionFunction using the descrptionWithSayings method.
 	@param placeBefore whether to place the saying before or after the simple description.
 	@param sayings the sayings to use. Each element must be a String.
-	@throws NullPointerException if sayings is null or any saying is null.
+	@throws NullPointerException if sayings is null.
 	@throws IllegalArgumentException if sayings is empty
+	@throws JSONException if sayings is malformed.
 	@return the described ListingDescriptionFunction
 	*/
 	static ListingDescriptionFunction descriptionWithSayings(boolean placeBefore, JSONArray sayings){
-		return ListingDescriptionFunction.descriptionWithSayings(placeBefore, (String[])parseNames(sayings).toArray());
+		return ListingDescriptionFunction.descriptionWithSayings(placeBefore, parseNames(sayings).toArray(new String[0]));
 	} 
 
 	private static Collection<String> parseNames(JSONArray names){

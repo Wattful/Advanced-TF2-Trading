@@ -1,0 +1,11 @@
+{"buy": {"listings": [
+	{"currencies": {"keys": 15, "metal": 9}, "steamid": "A", "item": {"attributes": {}}}, 
+	{"currencies": {"keys": 15, "metal": 7}, "steamid": "B", "item": {}}, 
+	{"currencies": {"keys": 15, "metal": 0}, "steamid": "A", "item": {}}, 
+	{"currencies": {"keys": 14, "metal": 27}, "steamid": "C", "item": {"attributes": {}}}]}, 
+"sell": {"listings": [
+	{"currencies": {"keys": 15, "metal": 18}, "steamid": "D", "item": {}}, 
+	{"currencies": {"keys": 16, "metal": 9}, "steamid": "A", "item": {"attributes": {}}}, 
+	{"currencies": {"keys": 16, "metal": 9}, "steamid": "E", "item": {}}, 
+	{"currencies": {"keys": 16, "metal": 27}, "steamid": "F", "item": {"attributes": {}}}
+]}}

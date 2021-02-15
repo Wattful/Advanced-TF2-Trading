@@ -33,13 +33,17 @@ public class PriceRange{
 	@throws IllegalArgumentException if keyScrapRatio is non-positive.
 	*/
 	public PriceRange(Price lower, Price upper, int keyScrapRatio){
-		this(lower, upper, Price.average(keyScrapRatio, lower, upper));
-	}
-
-	private PriceRange(Price lower, Price upper, Price middle){
-		if(lower == null || upper == null || middle == null){
+		if(lower == null || upper == null){
 			throw new NullPointerException();
 		}
+		Price middle = Price.average(keyScrapRatio, lower, upper);
+		boolean switched = lower.getDecimalPrice(keyScrapRatio) > upper.getDecimalPrice(keyScrapRatio);
+		this.lower = switched ? upper : lower;
+		this.upper = switched ? lower : upper;
+		this.middle = middle;
+	}
+	
+	private PriceRange(Price lower, Price upper, Price middle) {
 		this.lower = lower;
 		this.upper = upper;
 		this.middle = middle;
@@ -90,13 +94,24 @@ public class PriceRange{
 		Price middle = Price.fromJSONRepresentation(input.getJSONObject("middle"));
 		return new PriceRange(lower, upper, middle);
 	}
+	
+	/**Determines whether the given backpack.tf price range object is priced in the two acceptable currencies: keys and metal.
+	Using the fromBackpackTFRepresentation method to parse currencies other than keys or metal will result in an exception.
+	@param pricesObject the item's prices object.
+	@throws NullPointerException if pricesObject is null.
+	@throws JSONException if pricesObject is malformed.
+	@return a boolean indicating whether the given item price object is priced in keys.
+	*/
+	public static boolean acceptableCurrency(JSONObject pricesObject) {
+		return pricesObject.getString("currency").equals("keys") || pricesObject.getString("currency").equals("metal");
+	}
 
 	/**Constructs and returns a PriceRange from the Backpack.tf representation of an item's price.<br>
 	This representation can be found in the Backpack.tf prices object.
 	@param input the JSONObject.
 	@param keyScrapRatio the key-to-scrap ratio to use for this calculation.
 	@throws NullPointerException if input is null.
-	@throws IllegalArgumentException if the given price object's currency is neither keys or metal, or if keyScrapRatio is non-positive.
+	@throws IllegalArgumentException if the given price object's currency is neither keys nor metal, or if keyScrapRatio is non-positive.
 	@throws JSONException if the input JSONObject is malformed.
 	@return the constructed PriceRange.
 	*/
@@ -145,6 +160,10 @@ public class PriceRange{
 	@return a String representation of this PriceRange.
 	*/
 	public String toString(){
-		return "trading.economy.PriceRange: " + this.lower.toString() + " to " + this.upper.toString();
+		if(this.lower.equals(this.upper)) {
+			return "trading.economy.PriceRange: " + this.middle.valueString();
+		} else {
+			return "trading.economy.PriceRange: " + this.lower.valueString() + " to " + this.upper.valueString();
+		}
 	}
 }

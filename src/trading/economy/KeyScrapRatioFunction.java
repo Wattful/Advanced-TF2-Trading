@@ -38,8 +38,13 @@ public interface KeyScrapRatioFunction {
 	public static KeyScrapRatioFunction backpackTFRatio(){
 		return (JSONObject pricesObject) -> {
 			//Key-to-scrap ratio doesn't matter for these calculations, so 1 is used.
-			PriceRange range = PriceRange.fromBackpackTFRepresentation(pricesObject.getJSONObject("response").getJSONObject("items").getJSONObject("Mann Co. Supply Crate Key").getJSONObject("prices").getJSONObject("6").getJSONObject("Tradable").getJSONObject("Craftable").getJSONObject("0"), 1);
-			return range.middle().getScrapValue(1);
+			JSONObject prices = pricesObject.getJSONObject("response").getJSONObject("items").getJSONObject("Mann Co. Supply Crate Key").getJSONObject("prices").getJSONObject("6").getJSONObject("Tradable").getJSONObject("Craftable").getJSONObject("0");
+			int low = (int)Math.round((prices.getDouble("value") * 9));
+			int high = prices.has("value_high") ? (int)Math.round((prices.getDouble("value_high") * 9)) : low;
+			if(!prices.getString("currency").equals("metal")){
+				throw new JSONException("Price of keys in non-metal currency: " + prices.getString("currency"));
+			}
+			return (low + high)/2;
 		};
 	}
 }

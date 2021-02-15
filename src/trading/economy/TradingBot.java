@@ -25,12 +25,13 @@ public class TradingBot{
 		if(botID == null || functions == null || pricesObject == null){
 			throw new NullPointerException();
 		}
-		if(keyScrapRatio <= 0){
-			throw new IllegalArgumentException("keyScrapRatio was non-positive.");
-		}
 		this.myID = botID;
 		this.pricesObject = pricesObject;
 		this.functions = functions;
+		int keyScrapRatio = functions.keyScrapRatioFunction.calculateRatio(this.pricesObject);
+		if(keyScrapRatio <= 0) {
+			throw new IllegalArgumentException("Key-scrap ratio function returned non-positive value: " + keyScrapRatio);
+		}
 		this.keyScrapRatio = keyScrapRatio;
 		this.myHats = hats == null ? new ListingHashSet<Hat>() : hats.copy();
 		this.myListings = hats == null ? new ListingHashSet<BuyListing>() : listings.copy();
@@ -141,7 +142,7 @@ public class TradingBot{
 			return;
 		}
 
-		for(InventoryItem item : offer.itemsToReceive()){
+		for(InventoryItem item : offer.itemsToReceive().keySet()){
 			if(item.getQuality().equals(Quality.UNUSUAL)){
 				BuyListing b = myListings.get(item);
 				if(b == null){
@@ -157,7 +158,7 @@ public class TradingBot{
 			}
 		}
 
-		for(InventoryItem item : offer.itemsToGive()){
+		for(InventoryItem item : offer.itemsToGive().keySet()){
 			if(item.getQuality().equals(Quality.UNUSUAL)){
 				myHats.remove(item);
 			}
@@ -194,7 +195,7 @@ public class TradingBot{
 	@param defaultRatio the ratio of a hat's community price to set its boughtAt value to. Must be between 0 and 1, inclusive.
 	@throws NullPointerConnection if connection is null.
 	@throws IOException if the given SteamConnection throws IOException.
-	@throws IllegalArgumentException if precondiditons on defaultRatio are violated.
+	@throws IllegalArgumentException if preconditions on defaultRatio are violated.
 	*/
 	public synchronized void readHatsFromInventory(SteamConnection connection, double defaultRatio) throws IOException {
 		if(Double.isNaN(defaultRatio) || defaultRatio < 0 || defaultRatio > 1){
@@ -222,7 +223,7 @@ public class TradingBot{
 		}
 	}
 
-	/**Updates this TradingBot's prices object, recalcuates the key-to-scrap ratio, and updates the community prices on all Hats and BuyListings.<br>
+	/**Updates this TradingBot's prices object, recalculates the key-to-scrap ratio, and updates the community prices on all Hats and BuyListings.<br>
 	Additionally, filters this TradingBot's BuyListings to be exactly those which meet the bot's AcceptabilityFunction.
 	@param connection a connection to Backpack.tf, used to update the prices object.
 	@throws NullPointerException if pricesObject is null.
@@ -242,7 +243,7 @@ public class TradingBot{
 
 		forEachUnusual(this.pricesObject, (j, n, e) -> {
 			if(this.functions.acceptabilityFunction.determineAcceptability(j, n, Effect.forInt(e), this.keyScrapRatio)){
-				PriceRange communityPrice = PriceRange.fromBackpackTFRepresentation(pricesObject, this.keyScrapRatio);
+				PriceRange communityPrice = PriceRange.fromBackpackTFRepresentation(j, this.keyScrapRatio);
 				this.myListings.add(new BuyListing(n, Effect.forInt(e), communityPrice));
 			}
 		});
@@ -284,7 +285,6 @@ public class TradingBot{
 	/**Constructs and returns a TradingBot constructed from the given JSON input and the given function suite.
 	@param input The JSON input to construct from, a JSONObject returned from the getJSONRepresentation() method.
 	@param tfConnection a BackpackTFConnection used to retrieve backpack.tf prices.
-	@param pricesObject a complete Backpack.tf prices object.
 	@param functions The functions for this TradingBot to use.
 	@throws NullPointerException if any parameter is null.
 	@throws JSONException if input is malformed.
@@ -322,7 +322,7 @@ public class TradingBot{
 	@param defaultRatio the ratio of a hat's community price to set its boughtAt value to. Must be between 0 and 1, inclusive.
 	@param functions The functions for this TradingBot to use.
 	@throws NullPointerException if any parameter is null.
-	@throws IllegalArgumentException if precondiditons on defaultRatio are violated.
+	@throws IllegalArgumentException if preconditions on defaultRatio are violated.
 	@throws IOException if either of the given connections throws IOException.
 	@return the described TradingBot.
 	*/
@@ -389,13 +389,16 @@ public class TradingBot{
     }
 
 	private static void forEachUnusual(JSONObject a, PricesObjectFunction jof){
-		for(String s : JSONObject.getNames(a.getJSONObject("response").getJSONObject("items"))){
-			if(s.equals("Haunted Metal Scrap") || s.equals("Horseless Headless Horsemann's Headtaker")){
+		JSONObject items = a.getJSONObject("response").getJSONObject("items");
+		for(String s : JSONObject.getNames(items)){
+			if(s.equals("Haunted Metal Scrap") || s.equals("Horseless Headless Horsemann's Headtaker") || s.equals("Unusualifier")){
 				continue;
 			}
-			if(a.getJSONObject("response").getJSONObject("items").getJSONObject(s).getJSONObject("prices").has("5")){
-				for(String t : JSONObject.getNames(a.getJSONObject("response").getJSONObject("items").getJSONObject(s).getJSONObject("prices").getJSONObject("5").getJSONObject("Tradable").getJSONObject("Craftable"))){
-					jof.execute(a.getJSONObject("response").getJSONObject("items").getJSONObject(s).getJSONObject("prices").getJSONObject("5").getJSONObject("Tradable").getJSONObject("Craftable").getJSONObject(t), s, Integer.parseInt(t));
+			JSONObject itemPrices = items.getJSONObject(s).getJSONObject("prices");
+			if(itemPrices.has("5")){
+				JSONObject unusualPrices = itemPrices.getJSONObject("5").getJSONObject("Tradable").getJSONObject("Craftable");
+				for(String t : JSONObject.getNames(unusualPrices)){
+					jof.execute(unusualPrices.getJSONObject(t), s, Integer.parseInt(t));
 				}
 			}
 		}
@@ -403,7 +406,13 @@ public class TradingBot{
 
 	private static InventoryItem fromInventory(JSONObject inventoryItem, JSONObject inventoryDescriptions){
 		JSONObject itemDescription = inventoryDescriptions.getJSONObject(inventoryItem.getString("classid") + "_" + inventoryItem.getString("instanceid"));
-		return new InventoryItem(itemDescription.getString("market_name"), Quality.forInt(Integer.parseInt(itemDescription.getJSONObject("app_data").getString("quality"))), InventoryItem.parseEffect(itemDescription.getJSONArray("descriptions")), inventoryItem.getString("id"));
+		JSONArray descriptions;
+		try{
+			descriptions = itemDescription.getJSONArray("descriptions");
+		} catch(JSONException e) {
+			descriptions = new JSONArray();
+		}
+		return new InventoryItem(itemDescription.getString("market_name"), Quality.forInt(Integer.parseInt(itemDescription.getJSONObject("app_data").getString("quality"))), InventoryItem.parseEffect(descriptions), inventoryItem.getString("id"));
 	}
 
 	private void updateKeyScrapRatio(){

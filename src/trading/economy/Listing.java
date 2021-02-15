@@ -25,7 +25,10 @@ public abstract /*sealed*/ class Listing extends Item /*permits BuyListing, Hat*
 	@throws NullPointerException if any parameter is null.
 	*/
 	public Listing(String name, Effect effect, PriceRange communityPrice){
-		super(name, Quality.UNUSUAL, effect);
+		super(name, Quality.UNUSUAL, effect);	
+		if(communityPrice == null) {
+			throw new NullPointerException();
+		}
 		this.range = communityPrice;
 	}
 

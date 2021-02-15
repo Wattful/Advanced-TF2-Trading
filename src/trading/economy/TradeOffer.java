@@ -3,7 +3,7 @@ package trading.economy;
 import org.json.*;
 import java.util.*;
 
-//TODO: Consider returning a map from inventory item to evaluation.
+//TODO:
 
 /**Class representing a trade offer.<br> 
 This class, upon construction, will calculate whether the trade offer should be accepted, declined, or held according to provided prices.<br>
@@ -12,14 +12,14 @@ An instance of this class can be obtained by using the fromJSON method.
 
 public class TradeOffer{
 	private final TradeOfferResponse response;
-	private final Collection<InventoryItem> itemsToGive;
-	private final Collection<InventoryItem> itemsToReceive;
+	private final Map<InventoryItem, Integer> itemsToGive;
+	private final Map<InventoryItem, Integer> itemsToReceive;
 	private final int ourValue;
 	private final int theirValue;
 	private final String partnerID;
 	private final String data;
 
-	private TradeOffer(TradeOfferResponse tor, Collection<InventoryItem> itemsToGive, Collection<InventoryItem> itemsToReceive, int ourValue, int theirValue, String partner, String data){
+	private TradeOffer(TradeOfferResponse tor, Map<InventoryItem, Integer> itemsToGive, Map<InventoryItem, Integer> itemsToReceive, int ourValue, int theirValue, String partner, String data){
 		this.response = tor;
 		this.itemsToGive = itemsToGive;
 		this.itemsToReceive = itemsToReceive;
@@ -36,18 +36,18 @@ public class TradeOffer{
 		return this.response;
 	} 
 
-	/**Returns the items to give in the trade, as a set of InventoryItems.
+	/**Returns a map from the items to give in this trade to their evaluations, in scrap.
 	@return the items to give in the trade.
 	*/
-	public Set<InventoryItem> itemsToGive(){
-		return Set.copyOf(this.itemsToGive);
+	public Map<InventoryItem, Integer> itemsToGive(){
+		return Map.copyOf(this.itemsToGive);
 	}
 
-	/**Returns the items to receive in the trade, as a set of InventoryItems.
+	/**Returns a map from the items to receive in this trade to their evaluations, in scrap.
 	@return the items to receive in the trade.
 	*/
-	public Set<InventoryItem> itemsToReceive(){
-		return Set.copyOf(this.itemsToReceive);
+	public Map<InventoryItem, Integer> itemsToReceive(){
+		return Map.copyOf(this.itemsToReceive);
 	}
 
 	/**Returns our value in the trade.
@@ -71,7 +71,7 @@ public class TradeOffer{
 		return this.partnerID;
 	}
 
-	/**Returns a String containing a detailed representation of this TradeOffer. This detailed represenation will contain:<br>
+	/**Returns a String containing a detailed representation of this TradeOffer. This detailed representation will contain:<br>
 	<ul>
 		<li>The ID of the trade offer's partner.</li>
 		<li>List of items to give and items to receive in the trade, along with each item's ID and its evaluation in total scrap.</li>
@@ -86,7 +86,7 @@ public class TradeOffer{
 
 	/**Constructs, evaluates, and returns a TradeOffer from the given data.<br>
 	This function is equivalent to calling the more complicated fromJSON function with a forgiveness of 0, canHold = true, and ownerIDs = null.
-	@param offer the JSONObject represenation of the offer.
+	@param offer the JSONObject representation of the offer.
 	@param hatPrices prices for the Bot's items.
 	@param buyListingPrices prices for the items that the Bot wants to buy.
 	@param keyScrapRatio the key-to-scrap ratio to use for this calculation.
@@ -106,9 +106,9 @@ public class TradeOffer{
 	<ol>
 		<li>If the item is a currency (ie keys or metal), the item will be evaluated at the value of that currency.</li>
 		<li>Otherwise, the method will check the given hatPrices and buyListingPrices for the item.
-		items to give are evaluated using hatPrices, and items to receive are evaluated using buyListingPrices.</li>
+		Items to give are evaluated using hatPrices, and items to receive are evaluated using buyListingPrices.</li>
 		<li>If the item is not a currency and it does not appear in the prices objects, then the item's price cannot be determined. The offer now becomes an item offer (see below). 
-		If the item is in items to receive, then the item is valued at 0. If the item is in items to give, the item is valued effectively infinitely. This is to prevent the bot from accidently trading away items.</li>
+		If the unevaluatable item is in items to receive, then the item is valued at 0. If the item is in items to give, the item is valued effectively infinitely. This is to prevent the bot from accidently trading away items.</li>
 	</ol>
 	Once this is finished, the result is determined as follows:
 	<ul>
@@ -149,24 +149,26 @@ public class TradeOffer{
 		int ourValue = 0;
 		int theirValue = 0;
 		boolean isItem = false;
+		boolean ourItemUnpriced = false;
 		StringBuffer data = new StringBuffer();
-		List<InventoryItem> ourInventoryItems = new ArrayList<>();
-		List<InventoryItem> theirInventoryItems = new ArrayList<>();
+		Map<InventoryItem, Integer> ourInventoryItems = new HashMap<>();
+		Map<InventoryItem, Integer> theirInventoryItems = new HashMap<>();
 
 		data.append("Our items include:");
 		for(Object o : ourItems){
 			data.append("\n");
 			JSONObject j = (JSONObject)o;
 			InventoryItem item = fromTradeOfferItem(j);
-			ourInventoryItems.add(item);
 			int value = evaluateItem(item, hatPrices, keyScrapRatio);
-
+			ourInventoryItems.put(item, value);
+			
 			if(value != 0){
 				data.append(item.toString() + ", valued at " + value);
 				ourValue += value;
 			} else {
 				data.append(item.toString() + ", not in our pricelist");
-				ourValue = Integer.MAX_VALUE/2;
+				ourItemUnpriced = true;
+				isItem = true;
 			}
 		}
 
@@ -175,9 +177,9 @@ public class TradeOffer{
 			data.append("\n");
 			JSONObject j = (JSONObject)o;
 			InventoryItem item = fromTradeOfferItem(j);
-			theirInventoryItems.add(item);
 			int value = evaluateItem(item, buyListingPrices, keyScrapRatio);
-
+			theirInventoryItems.put(item, value);
+			
 			if(value != 0){
 				data.append(item.toString() + ", valued at " + value);
 				theirValue += value;
@@ -191,11 +193,14 @@ public class TradeOffer{
 		data.append("\n\n" + totals);
 		String partner = offer.getString("partner");
 
-		if(ownerIDs != null && ownerIDs.contains(offer.getString("partner"))){
-			data.append("The offer was accepted because " + offer.getString("partner") + " is an owner");
+		if(ownerIDs != null && ownerIDs.contains(partner)){
+			data.append("The offer was accepted because " + partner + " is an owner");
 			return new TradeOffer(TradeOfferResponse.ACCEPT, ourInventoryItems, theirInventoryItems, ourValue, theirValue, partner, data.toString());
-		} else if(ourValue * (1 - forgiveness) <= theirValue){
+		} else if(ourValue <= theirValue && !ourItemUnpriced){
 			data.append("\n\nThe offer with " + partner + " was accepted because our value was less than or equal to their value.");
+			return new TradeOffer(TradeOfferResponse.ACCEPT, ourInventoryItems, theirInventoryItems, ourValue, theirValue, partner, data.toString());
+		} else if(ourValue * (1 - forgiveness) <= theirValue && !ourItemUnpriced){
+			data.append("\n\nThe offer with " + partner + " was accepted because our value was within forgiveness margin " + forgiveness + "of their value.");
 			return new TradeOffer(TradeOfferResponse.ACCEPT, ourInventoryItems, theirInventoryItems, ourValue, theirValue, partner, data.toString());
 		} else if(isItem && canHold){
 			data.append("\n\nThe offer with " + partner + " was held because it was an item offer.");

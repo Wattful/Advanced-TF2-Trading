@@ -74,6 +74,9 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 		if(Double.isNaN(profitRatio)){
 			throw new IllegalArgumentException("profitRatio was NaN.");
 		}
+		if(Double.isInfinite(profitRatio)){
+			throw new IllegalArgumentException("profitRatio was infinite.");
+		}
 		if(profitRatio <= 0){
 			throw new IllegalArgumentException("profitRatio was non-positive.");
 		}
@@ -94,6 +97,9 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 		if(Double.isNaN(ratioOfPrice)){
 			throw new IllegalArgumentException("ratioOfPrice was NaN.");
 		}
+		if(Double.isInfinite(ratioOfPrice)){
+			throw new IllegalArgumentException("ratioOfPrice was infinite.");
+		}
 		if(ratioOfPrice <= 0){
 			throw new IllegalArgumentException("ratioOfPrice was non-positive.");
 		}
@@ -110,10 +116,11 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 	If mustProfit is true, it will never set its price lower than the price that the hat was bought for.<br>
 	If the hat has no sell listings, it will set the price to defaultRatio of the hat's community price.
 	@param listingsToConsider The number of listings to average. Must be positive.
-	@param overcutRatio Ratio to overcut price by. Notice that undercutting can be done by setting this value to be negative.
+	@param overcutRatio Ratio to undercut price by. Notice that overcutting can be done by setting this value to be negative.
 	@param defaultRatio The ratio to set a price to when no listings are found. Must be positive.
 	@param mustProfit Whether to disable the function from setting a price lower than that the Hat was bought for.
 	@param botID The bot's ID. Used to ignore listings made by the bot.
+	@throws NullPointerException if id is null.
 	@throws IllegalArgumentException if any preconditions are violated, any double arguments are NaN or infinite, or any argument is null.
 	@return the described HatPriceFunction.
 	*/
@@ -130,9 +137,13 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 		if(defaultRatio <= 0){
 			throw new IllegalArgumentException("defaultRatio was non-positive.");
 		}
+		if(botID == null) {
+			throw new NullPointerException();
+		}
 		return (Hat h, BackpackTFConnection connection, int keyScrapRatio) -> {
 			JSONObject listings = connection.getListingsForItem(h);
 			PriceFunctionUtils.removeListingsFromUser(listings, botID);
+			PriceFunctionUtils.removeListingsWithoutUnusualEffect(listings);
 
 			Price communityPrice = h.getCommunityPrice().middle();
 			JSONArray sellListings = listings.getJSONObject("sell").getJSONArray("listings");
@@ -150,7 +161,7 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 				prices[i] = new Price(keys, refined);
 			}
 
-			Price tentativePrice = Price.average(keyScrapRatio, prices).scaleBy(-undercutRatio, keyScrapRatio);
+			Price tentativePrice = Price.average(keyScrapRatio, prices).scaleBy(1 - undercutRatio, keyScrapRatio);
 			if(tentativePrice.getDecimalPrice(keyScrapRatio) < h.getPurchasePrice().getDecimalPrice(keyScrapRatio) && mustProfit){
 				return h.getPurchasePrice();
 			}

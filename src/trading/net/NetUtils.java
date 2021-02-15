@@ -43,8 +43,8 @@ public class NetUtils{
 		}
 		JSONObject data;
 		Scanner input = new Scanner(connection.getInputStream());
-		String result = input.nextLine();
-		//System.out.println(result);
+		input.useDelimiter("\\Z");
+		String result = input.next();
 		data = new JSONObject(result);
 		input.close();
 		return data;

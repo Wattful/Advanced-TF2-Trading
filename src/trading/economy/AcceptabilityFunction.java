@@ -3,9 +3,13 @@ package trading.economy;
 import org.json.*;
 import java.util.*;
 
-//TODO: Figure out how unpriced hats work
+//TODO: Figure out how unpriced hats work, consider feature of accepting/declining groups of hats
 
-/**Functional interface which takes in information about an unusual hat and determines whether this hat is "acceptable", or whether a BuyListing should be made for it.
+/**Functional interface which takes in information about an unusual hat and determines whether this hat is 
+"acceptable", or whether a BuyListing should be made for it.<br>
+All default functions provided, including acceptAll, reject hats which are priced in a non-keys-or-metal currency, such as buds or USD.
+Accepting these hats will cause errors, as they are unsupported by the Price and PriceRange objects.<br>
+A method for checking currency types, acceptableCurrency, is provided in PriceRange.
 */
 
 @FunctionalInterface
@@ -21,17 +25,17 @@ public interface AcceptabilityFunction{
 	*/
 	boolean determineAcceptability(JSONObject pricesObject, String name, Effect effect, int keyScrapRatio);
 
-	/**Returns a trivial AcceptabilityFunction which accepts all hats.
+	/**Returns a trivial AcceptabilityFunction which accepts all hats, with one exception: 
+	those that are priced in a non-keys-or-metal currency such as buds or USD.
 	@return the described AcceptabilityFunction.
 	*/
 	public static AcceptabilityFunction acceptAll(){
 		return (JSONObject pricesObject, String name, Effect effect, int keyScrapRatio) -> {
-			return true;
+			return PriceRange.acceptableCurrency(pricesObject);
 		};
 	}
 
-	/**Returns an AcceptabilityFunction which returns true only if the hat satfisfies several conditions, one for each parameter.<br>
-	In addition to the parameter conditions, the returned function will reject any hat whose price is set in a non-keys currency, such as buds or USD.<br>
+	/**Returns an AcceptabilityFunction which returns true only if the hat satisfies several conditions, one for each parameter.<br>
 	The parameter restrictions are:
 	@param minKeys Checks that the hat's average value is above minKeys keys.
 	@param maxKeys Checks that the hat's average value is below maxKeys keys. Negative or 0 value indicates no restriction.
@@ -45,6 +49,9 @@ public interface AcceptabilityFunction{
 			throw new IllegalArgumentException("A value was NaN.");
 		}
 		return (JSONObject pricesObject, String name, Effect effect, int keyScrapRatio) -> {
+			if(!PriceRange.acceptableCurrency(pricesObject)) {
+				return false;
+			}
 			return checkDataOnHat(pricesObject, minKeys, maxKeys, maxRange, lastUpdate, keyScrapRatio);
 		};
 	}
@@ -64,6 +71,9 @@ public interface AcceptabilityFunction{
 	*/
 	public static AcceptabilityFunction checkType(boolean nameMode, Collection<? extends String> names, boolean effectMode, Collection<? extends Effect> effects){
 		return (JSONObject pricesObject, String name, Effect effect, int keyScrapRatio) -> {
+			if(!PriceRange.acceptableCurrency(pricesObject)) {
+				return false;
+			}
 			return checkTypeOfHat(name, effect, nameMode, names, effectMode, effects);
 		};
 	}
@@ -77,10 +87,13 @@ public interface AcceptabilityFunction{
 			throw new IllegalArgumentException("A value was NaN.");
 		}
 		return (JSONObject pricesObject, String name, Effect effect, int keyScrapRatio) -> {
+			if(!PriceRange.acceptableCurrency(pricesObject)) {
+				return false;
+			}
 			return checkDataOnHat(pricesObject, minKeys, maxKeys, maxRange, lastUpdate, keyScrapRatio) && checkTypeOfHat(name, effect, nameMode, names, effectMode, effects);
 		};
 	}
-
+	
 	//Performs the checks described in checkData
 	private static boolean checkDataOnHat(JSONObject pricesObject, double minKeys, double maxKeys, double maxRange, long lastUpdate, int keyScrapRatio){
 		if(pricesObject == null){
@@ -96,9 +109,6 @@ public interface AcceptabilityFunction{
 		Price highPrice = communityPrice.upper();
 		java.util.Date d = new java.util.Date();
 
-		if(!pricesObject.getString("currency").equals("keys")){
-			return false;
-		}
 		if(middlePrice.getDecimalPrice(keyScrapRatio) < minKeys){
 			return false;
 		}

@@ -15,7 +15,7 @@ public class InventoryItem extends Item{
 	@param quality The item's quality.
 	@param effect The item's unusual effect. Ignored if item is not unusual.
 	@param id The item's id.
-	@throws NullPointerException if any paramter other than effect is null.
+	@throws NullPointerException if any parameter other than effect is null.
 	@throws IllegalArgumentException if quality is Unusual and effect is null.
 	*/
 	public InventoryItem(String fullName, Quality quality, Effect effect, String id){
@@ -42,7 +42,7 @@ public class InventoryItem extends Item{
 	public static Effect parseEffect(JSONArray tags){
 		for(Object o : tags){
 			JSONObject j = (JSONObject)o;
-			if(j.getString("color").equals("ffd700")){
+			if(j.has("color") && j.getString("color").equals("ffd700")){
 				String tag = j.getString("value");
 				return Effect.forName(tag.substring(tag.indexOf(":") + 2));
 			}

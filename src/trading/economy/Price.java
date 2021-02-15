@@ -7,7 +7,7 @@ import org.json.*;
 /**Immutable class representing an item price, in keys and refined.
 */
 
-public class Price{
+public class Price implements Comparable<Price>{
 	private final int keys;
 	private final int refined;
 
@@ -107,7 +107,7 @@ public class Price{
 		}
 		int k = (int)decimalPrice;
 		double decimalRef = decimalPrice - k;
-		int r = (int)((decimalRef * keyScrapRatio) / 9);
+		int r = (int)Math.round((decimalRef * keyScrapRatio) / 9);
 		return new Price(k, r);
 	}
 
@@ -115,16 +115,43 @@ public class Price{
 	@param keyScrapRatio the key-to-scrap ratio to use for this calculation.
 	@param prices the prices to average.
 	@throws NullPointerException if prices is null or any value in prices is null.
-	@throws IllegalArgumentException if keyScrapRatio is non-positive.
+	@throws IllegalArgumentException if keyScrapRatio is non-positive, or no prices are provided.
 	@return the average price.
 	*/
 	public static Price average(int keyScrapRatio, Price... prices){
+		if(prices.length == 0) {
+			throw new IllegalArgumentException("No prices were provided.");
+		}
 		double total = 0;
 		for(Price p : prices){
 			total += p.getDecimalPrice(keyScrapRatio);
 		}
 		double average = total/prices.length;
 		return calculate(average, keyScrapRatio);
+	}
+	
+	/**Returns a String describing this Price.
+	@return a String describing this Price.
+	*/
+	String valueString() {
+		return this.keys + " keys, " + this.refined + " refined";
+	}
+	
+	@Override
+	/**Compares this Price to the specified Price, returning a negative integer, zero, or a positive integer if this Price is
+	less than, equal to, or greater than the given Price.
+	@param p the Price to compare to
+	@throws NullPointerException if p is null
+	@return an integer indicating the comparison's result.
+	*/
+	public int compareTo(Price p) {
+		if(this.equals(p)) {
+			return 0;
+		}
+		if(this.keys != p.keys) {
+			return Integer.compare(this.keys, p.keys);
+		}
+		return Integer.compare(this.refined, p.refined);
 	}
 
 	/**Returns a hash code for this Price.
@@ -159,6 +186,6 @@ public class Price{
 	*/
 	@Override
 	public String toString(){
-		return "trading.economy.Price: " + keys + " keys and " + refined + " refined";
+		return "trading.economy.Price: " + this.valueString();
 	}
 }

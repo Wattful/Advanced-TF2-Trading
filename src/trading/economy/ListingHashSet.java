@@ -35,7 +35,8 @@ public class ListingHashSet<E extends Listing> extends HashSet<E> implements Lis
 		return answer;
 	}
 
-	/**Returns a JSONArray representing all listings in this ListingHashSet, suitable for sending to Backpack.tf.
+	/**Returns a JSONArray representing all listings in this ListingHashSet, suitable for sending to Backpack.tf.<br>
+	Non-visible listings will not be included in the array.
 	@param ldf Function to generate a descriptions for the listings. If ldf is null, listings will not have descriptions.
 	@return a JSONArray representing all listings in this ListingHashSet
 	*/
@@ -51,14 +52,6 @@ public class ListingHashSet<E extends Listing> extends HashSet<E> implements Lis
 			} catch(NonVisibleListingException e){}
 		}
 		return answer;
-	}
-
-	@Override
-	/**Returns a String representation of this ListingHashSet.
-	@return a String representation of this ListingHashSet.
-	*/
-	public String toString(){
-		return this.getJSONRepresentation().toString();
 	}
 
 	/**Returns a ListingHashSet of Hat constructed from the given JSONArray of Hat JSON representations.
@@ -128,5 +121,13 @@ public class ListingHashSet<E extends Listing> extends HashSet<E> implements Lis
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	/**Returns a String representation of this ListingHashSet.
+	@return a String representation of this ListingHashSet.
+	*/
+	public String toString(){
+		return this.getJSONRepresentation().toString();
 	}
 }

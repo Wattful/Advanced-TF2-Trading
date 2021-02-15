@@ -10,7 +10,7 @@ References to a quality's int value refer to its Steam API schema integer value.
 
 public enum Quality{
 	NORMAL("Normal", 0, ""), GENUINE("Genuine", 1), VINTAGE("Vintage", 3), UNUSUAL("Unusual", 5), UNIQUE("Unique", 6, "The"), COMMUNITY("Community", 7), VALVE("Valve", 8), 
-	SELF_MADE("Self-Made", 9), STRANGE("Strange", 11, ""), HAUNTED("Haunted", 13), COLLECTORS("Collector's", 14), DECORATED("Decorated", 15, "");
+	SELF_MADE("Self-Made", 9), STRANGE("Strange", 11), HAUNTED("Haunted", 13), COLLECTORS("Collector's", 14), DECORATED("Decorated", 15, "");
 
 	private final String name;
 	private final int code;
@@ -41,7 +41,7 @@ public enum Quality{
 	@return the described String.
 	*/
 	public String removePrefix(String fullName){
-		if(fullName.toLowerCase().substring(0, this.prefix.length()).equals(this.prefix.toLowerCase())){
+		if(fullName.length() > this.prefix.length() && fullName.toLowerCase().substring(0, this.prefix.length()).equals(this.prefix.toLowerCase())){
 			return fullName.substring(this.prefix.length() + 1);
 		} else {
 			return fullName;
@@ -71,7 +71,7 @@ public enum Quality{
 		if(!stringQualityLookup.containsKey(qualityName.toLowerCase())){
 			throw new NoSuchElementException("No Quality with name " + qualityName + " exists.");
 		}
-		return stringQualityLookup.get(qualityName);
+		return stringQualityLookup.get(qualityName.toLowerCase());
 	}
 
 	/**Returns a Quality corresponding to the given quality int value.

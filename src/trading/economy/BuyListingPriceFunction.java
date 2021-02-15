@@ -33,6 +33,7 @@ public interface BuyListingPriceFunction extends PriceFunction<BuyListing>{
 	@param maxRatio The maximum ratio to set a price to. Must be positive
 	@param defaultRatio The ratio to set a price to when no listings are found. Must be positive.
 	@param botID The bot's ID. Used to ignore listings made by the bot.
+	@throws NullPointerException if id is null.
 	@throws IllegalArgumentException if any preconditions are violated, or any double arguments are NaN or infinite.
 	@return the described BuyListingPriceFunction.
 	*/
@@ -52,6 +53,9 @@ public interface BuyListingPriceFunction extends PriceFunction<BuyListing>{
 		if(defaultRatio <= 0){
 			throw new IllegalArgumentException("defaultRatio was non-positive.");
 		}
+		if(botID == null) {
+			throw new NullPointerException();
+		}
 		return (BuyListing bl, BackpackTFConnection connection, int keyScrapRatio) -> {
 			JSONObject listings = connection.getListingsForItem(bl);
 			PriceFunctionUtils.removeListingsFromUser(listings, botID);
@@ -68,12 +72,12 @@ public interface BuyListingPriceFunction extends PriceFunction<BuyListing>{
 			Price[] prices = new Price[numListings];
 			for(int i = 0; i < numListings; i++){
 				JSONObject currenciesObject = buyListings.getJSONObject(i).getJSONObject("currencies");
-				int keys = currenciesObject.getInt("keys");
+				int keys = currenciesObject.has("keys") ? currenciesObject.getInt("keys") : 0;
 				int refined = currenciesObject.has("metal") ? currenciesObject.getInt("metal") : 0;
 				prices[i] = new Price(keys, refined);
 			}
 
-			Price tentativePrice = Price.average(keyScrapRatio, prices).scaleBy(overcutRatio, keyScrapRatio);
+			Price tentativePrice = Price.average(keyScrapRatio, prices).scaleBy(overcutRatio + 1.0, keyScrapRatio);
 			if(tentativePrice.getDecimalPrice(keyScrapRatio)/communityPrice.getDecimalPrice(keyScrapRatio) > maxRatio){
 				return Price.calculate(communityPrice.getDecimalPrice(keyScrapRatio) * maxRatio, keyScrapRatio);
 			}

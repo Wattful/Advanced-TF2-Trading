@@ -17,16 +17,19 @@ public class PriceFunctionUtils{
 	@throws NullPointerException if any parameter is null.
 	*/
 	public static void removeListingsFromUser(JSONObject listings, String userid){
+		if(userid == null) {
+			throw new NullPointerException();
+		}
 		JSONArray buyListings = listings.getJSONObject("buy").getJSONArray("listings");
 		JSONArray sellListings = listings.getJSONObject("sell").getJSONArray("listings");
 		for(int i = 0; i < buyListings.length(); i++){
-			if(buyListings.getJSONObject(0).getString("steamid").equals(userid)){
+			if(buyListings.getJSONObject(i).getString("steamid").equals(userid)){
 				buyListings.remove(i);
 				i--;
 			}
 		}
 		for(int i = 0; i < sellListings.length(); i++){
-			if(sellListings.getJSONObject(0).getString("steamid").equals(userid)){
+			if(sellListings.getJSONObject(i).getString("steamid").equals(userid)){
 				sellListings.remove(i);
 				i--;
 			}

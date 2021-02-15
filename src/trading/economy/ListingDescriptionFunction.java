@@ -20,7 +20,7 @@ public interface ListingDescriptionFunction{
 	/**Returns a ListingDescriptionFunction which returns a simple description 
 	which states the price of the item and states that the offer will be accepted instantly.<br>
 	More precisely, the description will take the following form:<br>
-	"[Buying/Selling] this hat for X keys and X refined. Send me an offer, I will accept instantly. Item offers held for manual review."<br>
+	"[Buying/Selling] this hat for X keys and X refined. Send me an offer, I will accept instantly! Item offers held for manual review."<br>
 	Note that "and X refined" will be omitted if the listing's Price has 0 refined.
 	@return the described ListingDescriptionFunction
 	*/

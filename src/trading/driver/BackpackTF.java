@@ -93,8 +93,8 @@ class BackpackTF implements BackpackTFConnection{
 		JSONObject args = new JSONObject();
 		args.put("token", this.apiToken);
 		args.put("listings", toSend);
-		JSONObject response = NetUtils.request("https://backpack.tf/api/classifieds/list/v1", "POST", args).getJSONObject("response");
-		checkForError(response, "Send listings");
+		JSONObject response = NetUtils.request("https://backpack.tf/api/classifieds/list/v1", "POST", args);
+		//checkForError(response, "Send listings");
 		//return response;
 		/*try{
 			if(response != null){
@@ -133,9 +133,8 @@ class BackpackTF implements BackpackTFConnection{
 			args.put("particle", i.getEffect().getIntValue());
 		}
 		args.put("quality", i.getQuality().getIntValue());
-		JSONObject response = NetUtils.request("https://backpack.tf/api/classifieds/search/v1", "GET", args).getJSONObject("response");
-		checkForError(response, "Search listings");
-		return response;
+		JSONObject data = NetUtils.request("https://backpack.tf/api/classifieds/search/v1", "GET", args);
+		return data;
 	}
 
 	/**Returns the result of a backpack.tf get prices API call, as detailed at https://backpack.tf/api/index.html#/webapi-economy/App\Controllers\API\WebAPI\IGetPrices::v4
@@ -156,14 +155,7 @@ class BackpackTF implements BackpackTFConnection{
 		JSONObject args = new JSONObject();
 		args.put("key", this.apiKey);
 		JSONObject response = NetUtils.request("https://backpack.tf/api/IGetPrices/v4", "GET", args);
-		checkForError(response, "Get prices");
 		this.pricesObject = response;
 		return this.pricesObject;
-	}
-
-	private static void checkForError(JSONObject response, String name) throws IOException {
-		if(response.getInt("success") == 0){
-			throw new IOException(name + " API call failed with error message \"" + response.getString("message") + "\"");
-		}
 	}
 }

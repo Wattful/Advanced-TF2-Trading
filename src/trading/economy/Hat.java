@@ -22,8 +22,16 @@ public class Hat extends Listing{
 	private Price myPrice;
 	private boolean visible;
 
-	//Constructs a Hat from the given values.
-	private Hat(String name, Effect effect, PriceRange communityPrice, Price purchasePrice, String id, LocalDate dateBought){
+	/**Constructs a Hat from the given values.
+	@param name The hat's name
+	@param effect The hat's effect
+	@param communityPrice The hat's community price
+	@param purchasePrice The price the hat was bought at
+	@param id the hat's ID. Can be null, in which case the hat will be non-visible.
+	@param dateBought The date the hat was bought
+	@throws NullPointerException if any parameter except id is null.
+	*/
+	public Hat(String name, Effect effect, PriceRange communityPrice, Price purchasePrice, String id, LocalDate dateBought){
 		super(name, effect, communityPrice);
 		if(purchasePrice == null || dateBought == null){
 			throw new NullPointerException();
@@ -40,7 +48,7 @@ public class Hat extends Listing{
 	@param communityPrice The hat's community price
 	@param purchasePrice The price the hat was bought at
 	@param dateBought The date the hat was bought
-	@throws NullPointerException if any paramter is null.
+	@throws NullPointerException if any parameter is null.
 	*/
 	public Hat(String name, Effect effect, PriceRange communityPrice, Price purchasePrice, LocalDate dateBought){
 		this(name, effect, communityPrice, purchasePrice, null, dateBought);
@@ -54,6 +62,7 @@ public class Hat extends Listing{
 		//j.put("age", this.age);
 		j.put("dateBought", this.dateBought.toString());
 		j.put("id", this.id == null ? JSONObject.NULL : this.id);
+		j.put("price", this.myPrice == null ? JSONObject.NULL : this.myPrice.getJSONRepresentation());
 		j.put("boughtAt", this.boughtAt.getJSONRepresentation());
 		j.put("name", this.getName());
 		j.put("effect", this.getEffect().getIntValue());
@@ -129,7 +138,9 @@ public class Hat extends Listing{
 	@return a deep copy of this Hat.
 	*/
 	public Hat copy(){
-		return new Hat(this.getName(), this.getEffect(), this.getCommunityPrice(), this.boughtAt, this.id, this.dateBought);
+		Hat h = new Hat(this.getName(), this.getEffect(), this.getCommunityPrice(), this.boughtAt, this.id, this.dateBought);
+		h.setPrice(this.myPrice);
+		return h;
 	}
 
 	/**Returns the price that this Hat was purchased at.
@@ -139,7 +150,7 @@ public class Hat extends Listing{
 		return this.boughtAt;
 	}
 
-	/**Constructs and returns a Hat from a Listing, with the ID being uninitialized, and the purchase price set to the Listing's bot price.
+	/**Constructs and returns a Hat from a Listing, with the ID and price uninitialized, and the purchase price set to the Listing's bot price.
 	@param listing the Listing to construct from.
 	@throws NullPointerException if any parameter is null.
 	@throws NonVisibleListingException if the given listing is non-visible.
@@ -164,7 +175,11 @@ public class Hat extends Listing{
 		//int age = obj.getInt("age");
 		LocalDate dateBought = LocalDate.parse(obj.getString("dateBought"));
 		Price boughtAt = Price.fromJSONRepresentation(obj.getJSONObject("boughtAt"));
-		return new Hat(name, effect, communityPrice, boughtAt, id, dateBought);
+		Hat h = new Hat(name, effect, communityPrice, boughtAt, id, dateBought);
+		if(!obj.isNull("price")) {
+			h.setPrice(Price.fromJSONRepresentation(obj.getJSONObject("price")));
+		}
+		return h;
 	}
 
 	//Redetermines this hat's visibility.

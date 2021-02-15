@@ -67,23 +67,6 @@ Config file specs:
 	"arguments" can be omitted if the function or constructor has no arguments.
 */
 
-/*
-Options for automatic key/scrap ratio:								Pros 										Cons
-1. Don't include the option 										Easy 										Hard to use
-2. Include as feature in TradingBot 								Straightforward 							Would likely need to remove custom ratio feature.
-3. Do in main                            							Keep custom ratio, no changing economy package.    Convoluted 									
-4. Make a KeyScrapRatioFunction interface 							Best design 								Work                                            <--------
-*/
-
-/*
-Options for construction of functions:                                                              Pros 							Cons
-1. Hardcode lambda functions for each default function 												No editing economy package		Convoluted
-2. Include ways to translate JSON input to input that default functions accept 						No editing economy package 		Convoluted
-3. Write a corresponding default function for each function which is not representable as JSON.		Straightforward 				Have to edit economy package
-4. Write a "FunctionSuiteTranslators" class in driver which translates any functions. 				Straightforward 				None 						<--------
-*/
-
-
 public class Main{
     //File locations of json files storing hats and listings.
 	private static final String botPath;
@@ -370,7 +353,7 @@ public class Main{
 		tmp.replaceAll((Object in) -> {return JSONObject.NULL.equals(in) ? null : in;});
 		Object[] methodInputs = tmp.toArray();
 		for(Method m : methods){
-			//An assumption is made that no two default impelementation methods will have the same name. This is OK as I have control over it.
+			//An assumption is made that no two default implementation methods will have the same name. This is OK as I have control over it.
 			if(m.getName().equalsIgnoreCase(name)){
 				if(!cl.isAssignableFrom(m.getReturnType())){
 					continue;
@@ -510,11 +493,11 @@ public class Main{
 
 	public static void main(String[] args) throws IOException {
 		inputThread = new Thread(userInput, "User input");
-		inputThread.setDefaultUncaughtExceptionHandler(handler);
+		inputThread.setUncaughtExceptionHandler(handler);
 		botThread = new Thread(periodic, "Periodic function thread");
-		botThread.setDefaultUncaughtExceptionHandler(handler);
+		botThread.setUncaughtExceptionHandler(handler);
 		offerThread = new Thread(nativeOfferChecking, "Offer checking and processing");
-		offerThread.setDefaultUncaughtExceptionHandler(handler);
+		offerThread.setUncaughtExceptionHandler(handler);
 		inputThread.start();
 		offerThread.start();
 		botThread.start();

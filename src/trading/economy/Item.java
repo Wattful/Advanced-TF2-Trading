@@ -26,18 +26,14 @@ public class Item{
 	@param quality The item's quality.
 	@param effect If the item is Unusual, its unusual effect. Cannot be null if item is unusual. Ignored if not unusual.
 	@throws NullPointerException if fullName or quality is null.
-	@throws IllegalArgumentException if quality is unusual and effect is null.
 	*/
 	public Item(String fullName, Quality quality, Effect effect){
-		if(fullName == null || quality == null){
+		if(fullName == null || quality == null || (quality == Quality.UNUSUAL && effect == null)){
 			throw new NullPointerException();
-		}
-		if(quality == Quality.UNUSUAL && effect == null){
-			throw new IllegalArgumentException("Effect was null for unusual item.");
 		}
 
 		this.quality = quality;
-		this.priceIndex = effect;
+		this.priceIndex = quality == Quality.UNUSUAL ? effect : null;
 		this.name = this.quality.removePrefix(fullName);
 	}
 
@@ -67,7 +63,7 @@ public class Item{
 	*/
 	@Override
 	public final int hashCode(){
-		return this.getName().hashCode() + this.getEffect().hashCode() + this.getQuality().hashCode();
+		return this.getName().hashCode() + (this.getEffect() == null ? 0 : this.getEffect().hashCode()) + this.getQuality().hashCode();
 	}
 
 	/**Returns a boolean indicating whether the given Object is equal to this Item.<br>
