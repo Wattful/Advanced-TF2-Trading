@@ -2,8 +2,9 @@ package trading.economy;
 
 import org.json.*;
 import java.util.*;
+import java.util.regex.*;
 
-//TODO: Figure out how unpriced hats work, consider feature of accepting/declining groups of hats
+//TODO:
 
 /**Functional interface which takes in information about an unusual hat and determines whether this hat is 
 "acceptable", or whether a BuyListing should be made for it.<br>
@@ -62,9 +63,10 @@ public interface AcceptabilityFunction{
 	or the only names or effects which will not be accepted.<br>
 	If the mode variable is true, then the collection contains the names or effects which will be accepted, if it is false, 
 	it contains those which will not be accepted.<br>
-	In addition, the collections can be null, which indicates no restriction for names or effects, and in which case that mode variable is ignored.
+	In addition, the collections can be null, which indicates no restriction for names or effects, and in which case that mode variable is ignored.<br>
+	Note that regular expressions are accepted for hat's names.
 	@param nameMode the mode variable for hat names.
-	@param acceptableHats The names of the hats (should not have "the" at the beginning). null value indicates no restriction.
+	@param acceptableHats The names of the hats (should not have "the" at the beginning). Regular expressions are accepted. null value indicates no restriction.
 	@param effectMode the mode variable for hat effects.
 	@param acceptableEffects The effects. null value indicates no restriction.
 	@return the described AcceptabilityFunction.
@@ -129,7 +131,22 @@ public interface AcceptabilityFunction{
 		if(name == null || effect == null){
 			throw new NullPointerException();
 		}
-		if(names != null && nameMode != names.contains(name)){
+		boolean nameMatches = false;
+		for(String s : names){
+			try {
+				Matcher m = Pattern.compile(s).matcher(name);
+				if(m.matches()){
+					nameMatches = true;
+					break;
+				}
+			} catch(IllegalArgumentException e){
+				if(s.equals(name)){
+					nameMatches = true;
+					break;
+				}
+			}
+		}
+		if(names != null && nameMode != nameMatches){
 			return false;
 		}
 		if(effects != null && effectMode != effects.contains(effect)){

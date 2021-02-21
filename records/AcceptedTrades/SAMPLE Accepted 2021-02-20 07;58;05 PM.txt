@@ -1,0 +1,25 @@
+Our items include:
+Disco Beat Down Dragonborn Helmet (id: 8212157882), valued at 7803
+
+Their items include:
+Unique Mann Co. Supply Crate Key (id: 9861170131), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9861170135), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9861170142), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9861170108), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9861170089), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9861170101), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9861170127), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9861170119), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903713), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903824), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903819), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903746), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903738), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903717), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903723), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903979), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903971), valued at 459
+
+Our value: 7803 Their value: 7803
+
+The offer with <Partner ID> was accepted because our value was less than or equal to their value.

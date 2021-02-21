@@ -21,21 +21,15 @@ public class TradingBot{
 	private volatile JSONObject pricesObject;
 	private volatile int keyScrapRatio;
 
-	private TradingBot(String botID, JSONObject pricesObject, FunctionSuite functions, ListingCollection<Hat> hats, ListingCollection<BuyListing> listings){
-		if(botID == null || functions == null || pricesObject == null){
+	private TradingBot(String botID, BackpackTFConnection connection, FunctionSuite functions, ListingCollection<Hat> hats, ListingCollection<BuyListing> listings) throws IOException{
+		if(botID == null || functions == null || connection == null){
 			throw new NullPointerException();
 		}
 		this.myID = botID;
-		this.pricesObject = pricesObject;
 		this.functions = functions;
-		int keyScrapRatio = functions.keyScrapRatioFunction.calculateRatio(this.pricesObject);
-		if(keyScrapRatio <= 0) {
-			throw new IllegalArgumentException("Key-scrap ratio function returned non-positive value: " + keyScrapRatio);
-		}
-		this.keyScrapRatio = keyScrapRatio;
 		this.myHats = hats == null ? new ListingHashSet<Hat>() : hats.copy();
 		this.myListings = hats == null ? new ListingHashSet<BuyListing>() : listings.copy();
-		this.updateKeyScrapRatio();
+		this.updateAndFilter(connection);
 	}
 
 	/**Returns this TradingBot's Hats.
@@ -73,7 +67,7 @@ public class TradingBot{
 	@param connection the connection to Backpack.tf
 	@throws NullPointerException if connection is null.
 	*/
-	public synchronized void recalculatePrices(BackpackTFConnection connection){
+	public void recalculatePrices(BackpackTFConnection connection){
 		this.recalculatePrices(connection, null);
 	}
 
@@ -84,9 +78,9 @@ public class TradingBot{
 	@param callback callback function to call inbetween calls to recalculatePrice(). Ignored if null.
 	@throws NullPointerException if connection is null.
 	*/
-	public synchronized void recalculatePrices(BackpackTFConnection connection, Consumer<? super BackpackTFConnection> callback){
-		recalculatePriceInternal(this.myHats, connection, this.keyScrapRatio, this.functions.hatPriceFunction, callback);
-		recalculatePriceInternal(this.myListings, connection, this.keyScrapRatio, this.functions.buyListingPriceFunction, callback);
+	public void recalculatePrices(BackpackTFConnection connection, Consumer<? super BackpackTFConnection> callback){
+		this.recalculatePriceInternal(this.myHats, connection, this.keyScrapRatio, this.functions.hatPriceFunction, callback);
+		this.recalculatePriceInternal(this.myListings, connection, this.keyScrapRatio, this.functions.buyListingPriceFunction, callback);
 	}
 
 	/**Constructs, evaluates, and returns a TradeOffer from the given data.<br>
@@ -134,24 +128,40 @@ public class TradingBot{
 	If the given offer was accepted, the bot adds any hats that were received in the offer, and removes them from its BuyListings.<br>
 	Additionally, any hats which were given away in the offer are removed from the bot.
 	@param offer The trade offer to consider.
-	@throws IllegalArgumentException if itemsToReceive contains an unusual hat which this bot does not have a BuyListing for, or its BuyListing is non-visible.
+	@param defaultRatio Ratio of community price to set boughtAt to for any hats which have no BuyListing or whose BuyListing is non-visible.  
+	Must be between 0 and 1, inclusive.
 	@throws NullPointerException if offer is null.
+	@throws IllegalArgumentException if preconditions on defaultRatio are violated
 	*/
-	public synchronized void updateItemsAfterOffer(TradeOffer offer){
+	public synchronized void updateItemsAfterOffer(TradeOffer offer, double defaultRatio){
+		if(Double.isNaN(defaultRatio) || defaultRatio < 0 || defaultRatio > 1){
+			throw new IllegalArgumentException("Invalid default ratio value: " + defaultRatio);
+		}
 		if(offer.getResponse() != TradeOfferResponse.ACCEPT){
 			return;
 		}
 
 		for(InventoryItem item : offer.itemsToReceive().keySet()){
 			if(item.getQuality().equals(Quality.UNUSUAL)){
+				if(item.getName().equals("Haunted Metal Scrap") || item.getName().equals("Horseless Headless Horsemann's Headtaker")){
+					continue;
+				}
+				boolean defaul = false;
 				BuyListing b = myListings.get(item);
 				if(b == null){
-					throw new IllegalArgumentException("Bot had no BuyListing for " + item.toString());
+					defaul = true;
+				} else {
+					try{
+						myHats.add(Hat.fromListing(b));
+					} catch(NonVisibleListingException e){
+						defaul = true;
+					}
 				}
-				try{
-					myHats.add(Hat.fromListing(b));
-				} catch(NonVisibleListingException e){
-					throw new IllegalArgumentException("Bot BuyListing for " + item.toString() + " was non-visible", e);
+
+				if(defaul){
+					PriceRange communityPrice = PriceRange.fromBackpackTFRepresentation(getHatObject(this.pricesObject, item), this.keyScrapRatio);
+					myHats.add(new Hat(item.getName(), item.getEffect(), communityPrice, communityPrice.middle().scaleBy(defaultRatio, this.keyScrapRatio), LocalDate.now()));
+
 				}
 				
 				myListings.remove(item);
@@ -201,6 +211,10 @@ public class TradingBot{
 		if(Double.isNaN(defaultRatio) || defaultRatio < 0 || defaultRatio > 1){
 			throw new IllegalArgumentException("Invalid default ratio value: " + defaultRatio);
 		}
+		Map<Hat, Boolean> hasBeenSeen = new HashMap<>();
+		for(Hat h : this.myHats){
+			hasBeenSeen.put(h, false);
+		}
 		JSONObject inventory = connection.getInventoryForUser(this.myID);
 		JSONObject items = inventory.getJSONObject("rgInventory");
 		for(String s : JSONObject.getNames(items)){
@@ -214,12 +228,19 @@ public class TradingBot{
 			if(this.myHats.contains(item)){
 				Hat h = this.myHats.get(item);
 				h.setID(item.getID());
+				hasBeenSeen.put(h, true);
 				continue;
 			}
 			PriceRange communityPrice = PriceRange.fromBackpackTFRepresentation(getHatObject(this.pricesObject, item), this.keyScrapRatio);
 			Hat h = new Hat(item.getName(), item.getEffect(), communityPrice, communityPrice.middle().scaleBy(defaultRatio, this.keyScrapRatio), LocalDate.now());
+			h.setID(item.getID());
 			this.myHats.add(h);
 			this.myListings.remove(h);
+		}
+		for(Map.Entry<Hat, Boolean> me : hasBeenSeen.entrySet()){
+			if(me.getValue() == false){
+				this.myHats.remove(me.getKey());
+			}
 		}
 	}
 
@@ -295,7 +316,7 @@ public class TradingBot{
 		String id = input.getString("id");
 		ListingCollection<Hat> lch = ListingHashSet.hatSetFromJSON(input.getJSONArray("hats"));
 		ListingCollection<BuyListing> lcbl = ListingHashSet.buyListingSetFromJSON(input.getJSONArray("buyListings"));
-		return new TradingBot(id, tfConnection.getPricesObject(), functions, lch, lcbl);
+		return new TradingBot(id, tfConnection, functions, lch, lcbl);
 	}
 
 	/**Constructs and returns a TradingBot without any hats and with BuyListings automatically filtered.<br>
@@ -308,8 +329,7 @@ public class TradingBot{
 	@return the described TradingBot.
 	*/
 	public static TradingBot botWithoutHats(String steamID, BackpackTFConnection tfConnection, FunctionSuite functions) throws IOException {
-		TradingBot answer = new TradingBot(steamID, tfConnection.getPricesObject(), functions, null, null);
-		answer.updateAndFilter(tfConnection);
+		TradingBot answer = new TradingBot(steamID, tfConnection, functions, null, null);
 		return answer;
 	}
 
@@ -368,12 +388,14 @@ public class TradingBot{
 		return "trading.economy.TradingBot: ID: " + this.myID;
 	}
 
-	private static <T extends Listing> void recalculatePriceInternal(ListingCollection<T> l, BackpackTFConnection connection, int keyScrapRatio, PriceFunction<T> priceFunction, Consumer<? super BackpackTFConnection> callback){
+	private <T extends Listing> void recalculatePriceInternal(ListingCollection<T> l, BackpackTFConnection connection, int keyScrapRatio, PriceFunction<T> priceFunction, Consumer<? super BackpackTFConnection> callback){
 		for(T list : l){
-			try{
-				Price newPrice = priceFunction.calculatePrice(list, connection, keyScrapRatio);
-				list.setPrice(newPrice);
-			} catch(IOException e){} //This is not great, but acceptable because callback function should log any errors.
+			synchronized(this){
+				try{
+					Price newPrice = priceFunction.calculatePrice(list, connection, keyScrapRatio);
+					list.setPrice(newPrice);
+				} catch(IOException e){} //This is not great, but acceptable because callback function should log any errors.
+			}
 			if(callback != null){
 				callback.accept(connection);
 			}
@@ -416,6 +438,10 @@ public class TradingBot{
 	}
 
 	private void updateKeyScrapRatio(){
-		this.keyScrapRatio = this.functions.keyScrapRatioFunction.calculateRatio(this.pricesObject);
+		int ksr = this.functions.keyScrapRatioFunction.calculateRatio(this.pricesObject);
+		if(ksr <= 0){
+			throw new IllegalArgumentException("Key-to-scrap ratio function returned non-positive value: " + ksr);
+		}
+		this.keyScrapRatio = ksr;
 	}
 }

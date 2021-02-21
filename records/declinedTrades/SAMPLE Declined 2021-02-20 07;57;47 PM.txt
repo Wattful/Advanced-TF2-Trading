@@ -1,0 +1,18 @@
+Our items include:
+Orbiting Planets Flamboyant Flamenco (id: 8310721508), valued at 4680
+
+Their items include:
+Unique Mann Co. Supply Crate Key (id: 9848903868), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903873), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903881), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903889), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903898), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903906), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903847), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848904026), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848903996), valued at 459
+Unique Mann Co. Supply Crate Key (id: 9848904003), valued at 459
+
+Our value: 4680 Their value: 4590
+
+The offer with <Owner ID> was declined because our value was greater than their value.

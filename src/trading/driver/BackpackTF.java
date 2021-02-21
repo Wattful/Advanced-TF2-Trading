@@ -4,6 +4,10 @@ import trading.net.*;
 import trading.economy.*;
 import org.json.*;
 import java.io.*;
+import java.nio.file.*;
+import javax.imageio.IIOException;
+
+import static trading.driver.FileUtils.*;
 
 //TODO:
 
@@ -12,21 +16,23 @@ This class tracks a "used" property, in which the function hasBeenUsed() will re
 In addition, for debug and logging purposes, this class will track the last IOException which it threw.
 */
 
-class BackpackTF implements BackpackTFConnection{
+class BackpackTF implements LoggingBackpackTFConnection{
 	//private static final BackpackTF singleInstance = new BackpackTF(); //Not a singleton!
 
 	private final String apiKey;
 	private final String apiToken;
+	private final String fallbackPath;
 	private boolean used;
 	private IOException lastThrown;
 	private JSONObject pricesObject;
 
-	private BackpackTF(String apiKey, String apiToken){
+	private BackpackTF(String apiKey, String apiToken, String fallback){
 		if(apiKey == null || apiToken == null){
 			throw new NullPointerException();
 		}
 		this.apiKey = apiKey;
 		this.apiToken = apiToken;
+		this.fallbackPath = fallback;
 		this.used = false;
 		this.lastThrown = null;
 	}
@@ -34,23 +40,24 @@ class BackpackTF implements BackpackTFConnection{
 	/**Returns a connection to backpack.tf, using the given API credentials.
 	@param apiKey a valid backpack.tf API key.
 	@param apiToken a valid backpack.tf API token.
-	@throws NullPointerExcpetion if any parameter is null.
+	@param fallback optional path to fallback file to read from and write to if a Backpack.tf prices request fails.
+	@throws NullPointerExcpetion if apiKey or apiToken is null.
 	@return a connection to backpack.tf.
 	*/
-	static BackpackTF open(String apiKey, String apiToken){
-		return new BackpackTF(apiKey, apiToken);
+	static BackpackTF open(String apiKey, String apiToken, String fallback){
+		return new BackpackTF(apiKey, apiToken, fallback);
 	}
 
 	/**Resets this BackpackTF's used value to false.
 	*/
-	void resetUsed(){
+	public void resetUsed(){
 		this.used = false;
 	}
 
 	/**Returns whether this BackpackTF has been used since the last call to resetUsed()
 	@return whether this BackpackTF has been used.
 	*/
-	boolean hasBeenUsed(){
+	public boolean hasBeenUsed(){
 		return this.used;
 	}
 
@@ -61,14 +68,14 @@ class BackpackTF implements BackpackTFConnection{
 
 	/**Resets the last thrown IOException to null.
 	*/
-	void resetIOException(){
+	public void resetIOException(){
 		this.lastThrown = null;
 	}
 
 	/**Returns the last IOException that was thrown after the last call to resetIOException(), or null if no such IOException was thrown.
 	@return the last thrown IOException.
 	*/
-	IOException lastThrownIOException(){
+	public IOException lastThrownIOException(){
 		return this.lastThrown;
 	}
 
@@ -154,8 +161,24 @@ class BackpackTF implements BackpackTFConnection{
 		this.used();
 		JSONObject args = new JSONObject();
 		args.put("key", this.apiKey);
-		JSONObject response = NetUtils.request("https://backpack.tf/api/IGetPrices/v4", "GET", args);
-		this.pricesObject = response;
-		return this.pricesObject;
+		JSONObject response;
+		try{
+			response = NetUtils.request("https://backpack.tf/api/IGetPrices/v4", "GET", args);
+		} catch(IOException e){
+			if(this.fallbackPath != null){
+				this.lastThrown = e;
+				return new JSONObject(readFile(this.fallbackPath));
+			} else {
+				throw e;
+			}
+		}
+		if(this.fallbackPath != null){
+			try{
+				write(response.toString(), this.fallbackPath);
+			} catch(IOException e){
+				this.lastThrown = new IIOException("Failed to save fallback prices.", e);
+			}
+		}
+		return response;
 	}
 }

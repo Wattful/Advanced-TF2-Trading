@@ -1,6 +1,6 @@
 package trading.economy;
 
-//TODO:
+//TODO: Update unit tests
 
 /**Class representing an item, storing the item's name, quality, and effect if it has one.<br>
 Item classes are immutable with respect to all values stored in Item, but subclasses may have their own mutable fields.
@@ -63,7 +63,7 @@ public class Item{
 	*/
 	@Override
 	public final int hashCode(){
-		return this.getName().hashCode() + (this.getEffect() == null ? 0 : this.getEffect().hashCode()) + this.getQuality().hashCode();
+		return this.getName().toLowerCase().hashCode() + (this.getEffect() == null ? 0 : this.getEffect().hashCode()) + this.getQuality().hashCode();
 	}
 
 	/**Returns a boolean indicating whether the given Object is equal to this Item.<br>
@@ -83,7 +83,7 @@ public class Item{
 			return false;
 		}
 		Item uh = (Item)o;
-		return this.getName().equals(uh.getName()) && this.getEffect() == uh.getEffect() && this.getQuality().equals(uh.getQuality());
+		return this.getName().equalsIgnoreCase(uh.getName()) && this.getEffect() == uh.getEffect() && this.getQuality().equals(uh.getQuality());
 	}
 
 	/**Returns a String representation of this Item.

@@ -163,10 +163,10 @@ public class TradeOffer{
 			ourInventoryItems.put(item, value);
 			
 			if(value != 0){
-				data.append(item.toString() + ", valued at " + value);
+				data.append(formatItemString(item) + ", valued at " + value);
 				ourValue += value;
 			} else {
-				data.append(item.toString() + ", not in our pricelist");
+				data.append(formatItemString(item) + ", not in our pricelist");
 				ourItemUnpriced = true;
 				isItem = true;
 			}
@@ -181,10 +181,10 @@ public class TradeOffer{
 			theirInventoryItems.put(item, value);
 			
 			if(value != 0){
-				data.append(item.toString() + ", valued at " + value);
+				data.append(formatItemString(item) + ", valued at " + value);
 				theirValue += value;
 			} else {
-				data.append(item.toString() + ", not in our pricelist");
+				data.append(formatItemString(item) + ", not in our pricelist");
 				isItem = true;
 			}
 		}
@@ -194,13 +194,13 @@ public class TradeOffer{
 		String partner = offer.getString("partner");
 
 		if(ownerIDs != null && ownerIDs.contains(partner)){
-			data.append("The offer was accepted because " + partner + " is an owner");
+			data.append("\n\nThe offer was accepted because " + partner + " is an owner");
 			return new TradeOffer(TradeOfferResponse.ACCEPT, ourInventoryItems, theirInventoryItems, ourValue, theirValue, partner, data.toString());
 		} else if(ourValue <= theirValue && !ourItemUnpriced){
 			data.append("\n\nThe offer with " + partner + " was accepted because our value was less than or equal to their value.");
 			return new TradeOffer(TradeOfferResponse.ACCEPT, ourInventoryItems, theirInventoryItems, ourValue, theirValue, partner, data.toString());
 		} else if(ourValue * (1 - forgiveness) <= theirValue && !ourItemUnpriced){
-			data.append("\n\nThe offer with " + partner + " was accepted because our value was within forgiveness margin " + forgiveness + "of their value.");
+			data.append("\n\nThe offer with " + partner + " was accepted because our value was within forgiveness margin " + forgiveness + " of their value.");
 			return new TradeOffer(TradeOfferResponse.ACCEPT, ourInventoryItems, theirInventoryItems, ourValue, theirValue, partner, data.toString());
 		} else if(isItem && canHold){
 			data.append("\n\nThe offer with " + partner + " was held because it was an item offer.");
@@ -224,6 +224,14 @@ public class TradeOffer{
 			return 0;
 		}
 		return 0;
+	}
+
+	private static String formatItemString(InventoryItem item){
+		if(item.getQuality() == Quality.UNUSUAL){
+			return item.getEffect().getName() + " " + item.getName();
+		} else {
+			return item.getQuality().getName() + " " + item.getName();
+		}
 	}
 
 	/**Constructs and returns a InventoryItem from the given JSONObject, where the JSONObject is from a Steam trade offer API call.

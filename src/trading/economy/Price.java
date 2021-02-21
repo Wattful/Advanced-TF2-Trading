@@ -133,7 +133,7 @@ public class Price implements Comparable<Price>{
 	/**Returns a String describing this Price.
 	@return a String describing this Price.
 	*/
-	String valueString() {
+	public String valueString(){
 		return this.keys + " keys, " + this.refined + " refined";
 	}
 	
@@ -144,7 +144,7 @@ public class Price implements Comparable<Price>{
 	@throws NullPointerException if p is null
 	@return an integer indicating the comparison's result.
 	*/
-	public int compareTo(Price p) {
+	public int compareTo(Price p){
 		if(this.equals(p)) {
 			return 0;
 		}

@@ -2,7 +2,7 @@ package trading.economy;
 
 import org.json.*;
 
-//TODO:
+//TODO: Change unit tests to match BPTF discrepancy
 
 /**Functional interface representing a method for providing a key-to-scrap ratio given a Backpack.tf prices object.<br>
 The ratio can be based on the prices object or calculated in a different way.
@@ -37,12 +37,11 @@ public interface KeyScrapRatioFunction {
 	*/
 	public static KeyScrapRatioFunction backpackTFRatio(){
 		return (JSONObject pricesObject) -> {
-			//Key-to-scrap ratio doesn't matter for these calculations, so 1 is used.
-			JSONObject prices = pricesObject.getJSONObject("response").getJSONObject("items").getJSONObject("Mann Co. Supply Crate Key").getJSONObject("prices").getJSONObject("6").getJSONObject("Tradable").getJSONObject("Craftable").getJSONObject("0");
+			JSONObject prices = pricesObject.getJSONObject("response").getJSONObject("items").getJSONObject("Mann Co. Supply Crate Key").getJSONObject("prices").getJSONObject("6").getJSONObject("Tradable").getJSONArray("Craftable").getJSONObject(0);
 			int low = (int)Math.round((prices.getDouble("value") * 9));
 			int high = prices.has("value_high") ? (int)Math.round((prices.getDouble("value_high") * 9)) : low;
 			if(!prices.getString("currency").equals("metal")){
-				throw new JSONException("Price of keys in non-metal currency: " + prices.getString("currency"));
+				throw new JSONException("Price of keys in non-metal currency: " + prices.getString("currency")); //Hell might freeze over before this happens.
 			}
 			return (low + high)/2;
 		};

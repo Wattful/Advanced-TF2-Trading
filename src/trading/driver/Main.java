@@ -5,8 +5,10 @@ import java.io.*;
 import java.nio.file.*;
 import java.util.*;
 import java.util.function.*;
+import java.time.*;
 import java.net.*;
 import java.util.*;
+import java.util.regex.*;
 import java.text.*;
 import java.net.*;
 import java.lang.reflect.*;
@@ -14,19 +16,53 @@ import java.nio.charset.*;
 import java.util.stream.*;
 import trading.net.*;
 import trading.economy.*;
+import javax.imageio.IIOException;
 
-//TODO: Update catches to output to log.
+import static trading.driver.FileUtils.*;
+
+//TODO: 
+//update unittests
+
+//TOTEST:
+//remove backpacktf and steam unit tests
+
+//DONE:
+//CheckHatIDs after offer acceptance - set timeout?
+//Remove ID from trade records
+//think about setting external names of buylisting and hatpricefunction
+//Think about better logging for BackpackTF.getPrices
+//fix edge case of accepting an offer w/ unusual w/o buylisting,
+//have readhats delete unused hats
+//fix native offer checking config file search,
+//add commands to dump settings
+//consider command to dump all prices, 
+//Spawn new thread for manual recalculation
+//Fix synchronization for price recalculation
+//add some form of price object caching or fallback, 
+//fix file writes failing for nonexistent folders,
+//Recalculate prices upon automatic constructions
+//checkNodeJS
+//Add output for hats added from readitems, 
+//make update prices clearer, 
+//Think about skipping periodic function on startup (and having this functionality be done upon constructing the bot), 
+//Regex in AcceptabilityFunction
+//add npm requirements file
+//remove old files from tracking
+//Add precondition checks for bot settings values.
+//Remove trading.economy.inventoryItem from trade records,
+//fix native offer checking bug
+//add sample offers
+//add default config files
+//sending listings to bptf
+
+//Unit tests updates to make:
+//Regex in AcceptabilityFunction
+//Double in updateItemsAfterOffer
+//Removing hats in readHatsFromInventory
+//Item equals()
+//KeyScrapRatioFunction invalid currency
 
 //Possible refactorings: include options on whether to base on upper, lower, or middle, consider a messaging feature
-
-/*
-User input:
-1. Each function and its parameters.
-2. Key/Scrap ratio determination method (hardcoded or automatic update).
-3. Paths to read and write documentation files.                             <-- Need to be statically saved
-4. Bot parameters: Bot username/password, id, secrets, etc
-5. Trade offer parameters: Forgiveness, canHold, userID.                    <-- Need to be statically saved
-*/
 
 /*
 Config file specs:
@@ -42,84 +78,82 @@ Config file specs:
 2. botSettings.json:
 	ownerIDs: (JSONArray of String) owner IDs to accept automatically from.
 	canHold: whether the bot can hold trades.
-	forgiveness: forgiveness value.
-	keyScrapRatio: int indicating hardcoded value or "auto" to automatically update.
-	readBotFile: location to read trading bot data from.
-	writeBotFile: location to write trading bot data to.
+	forgiveness: forgiveness value.                                                           precondition: 0 <= x <= 1
+	keyScrapRatio: int indicating hardcoded value or "auto" to automatically update.          
+	botReadPath: location to read trading bot data from.
+	botWritePath: location to write trading bot data to.
 	constructWithHats: whether to automatically include hats in bot inventory when automatically constructing bot.
-	defaultRatio: default ratio for hats found in bot's inventory.
+	defaultRatio: default purchase price ratio for hats found in bot's inventory.             precondition: 0 <= x <= 1
 	acceptPath: path to write accepted log files to.
 	declinePath: path to write declined log files to.
 	holdPath: path to write held log files to.
 	logFile: path for exception log file, if any.
-	periodicSleep: time slept in between periodic actions
-	priceUpdateSleep: time slept after calling Backpack.tf listings API.
+	periodicSleep: time slept in between periodic actions                                     precondition: >= 0
+	priceUpdateSleep: time slept after calling Backpack.tf listings API.                      precondition: >= 0
+	disconnectBPTF: if true, don't send listings to Backpack.tf.
+	offerCheckSleep: how often to check trade offers.                                          precondition: >= 0
+	fallback: fallback path for backpack.tf prices.
 
 3. functions.json:
 	acceptabilityFunction
 	buyListingPriceFunction
-	hatPriceFunction
+	sellListingPriceFunction
 	listingDescriptionFunction
 
 	Each of these point to a JSONObject. This object should have two keys: a "name" key, which points to
 	 either the fully-qualified name of a custom function or the name of one of the provided functions,
-	and an "arguments" key, which provides arguments for either the provided function or a constructor for the custom function class.
-	"arguments" can be omitted if the function or constructor has no arguments.
+	and aa "parameters" key, which provides arguments for either the provided function or a constructor for the custom function class.
+	"parameters" can be omitted if the function or constructor has no arguments.
 */
 
 public class Main{
-    //File locations of json files storing hats and listings.
+	private static final String OFFER_CHECK_ARGUMENT_1 = "node";
+	private static final String OFFER_CHECK_ARGUMENT_2 = "nodejs/offerChecking.js";
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh;mm;ss aa");
+
+	private static final JSONObject botInfo;
+	private static final JSONObject botSettings;
+	private static final JSONObject functions;
+
 	private static final String botPath;
 	private static final String acceptedSavePath;
 	private static final String declinedSavePath;
 	private static final String heldSavePath;
 	private static final String logFile;
+	private static final String fallbackPath;
 	private static final String configPath = resolveConfigPath();
 
-	//private static final Map<Class<?>, Map<String, DefaultMethodConstructor<?>>> defaultMethodLookup;
+	private static final LoggingBackpackTFConnection backpackTF;
+	private static final SteamConnection steam;
 
-	private static final BackpackTF backpackTF;
-	private static final Steam steam;
-
-	//Command to start offerChecking.
-	private static final String OFFER_CHECK_ARGUMENT = "node trading/offerChecking.js";
+	private static final String botID;
+	private static final String username;
+	private static final String password;
+	private static final String sharedSecret;
+	private static final String identitySecret;
 
 	private static final double forgiveness;
 	private static final boolean canHold;
 	private static final List<String> ownerIDs;
 	private static final double defaultRatio;
+	private static final int offerCheckSleep;
 
-	//Sleep time, in milliseconds, between performing periodic actions and looking at listings.
 	private static final long periodicSleep;
 	private static final long priceUpdateSleep;
 
-	//Date format used when saving offer records.
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh;mm;ss aa");
-
-	//The trading bot object.
 	private static TradingBot elonMusk;
 
-	//This program has three threads.
-	//inputThread takes in user input and commands.
-	//botThread performs periodic actions.
-	//offerThread detects and responds to offers.
 	private static Thread inputThread;
 	private static Thread botThread;
 	private static Thread offerThread;
 
 	private static int successes = 0;
+	private static boolean recalculateOnStartup = false;
 
-		static {
-		JSONObject botInfo = loadConfigFile("botInfo.json");
-		JSONObject botSettings = loadConfigFile("botSettings.json");
-		JSONObject functions = loadConfigFile("function.json");
-
-		String botID = botInfo.getString("botID");
-		String apiKey = botInfo.getString("apiKey");
-		String apiToken = botInfo.getString("apiToken");
-
-		backpackTF = BackpackTF.open(apiKey, apiToken);
-		steam = Steam.open();
+	static {
+		botInfo = loadConfigFile("botInfo.json");
+		botSettings = loadConfigFile("botSettings.json");
+		functions = loadConfigFile("functions.json");
 
 		canHold = botSettings.getBoolean("canHold");
 		forgiveness = botSettings.getDouble("forgiveness");
@@ -140,10 +174,39 @@ public class Main{
 		defaultRatio = botSettings.getDouble("defaultRatio");
 		boolean constructWithHats = botSettings.getBoolean("constructWithHats");
 		boolean autoKeyScrap = botSettings.get("keyScrapRatio").equals("auto");
+		boolean disconnectBPTF = botSettings.getBoolean("dontSendListings");
+		offerCheckSleep = botSettings.getInt("offerCheckSleep");
+		fallbackPath = botSettings.get("fallback") == JSONObject.NULL ? null : botSettings.getString("fallback");
+		if(forgiveness < 0 || forgiveness > 1){
+			throw new IllegalArgumentException("Expected forgiveness value between 0 and 1, got " + forgiveness);
+		}
+		if(defaultRatio < 0 || defaultRatio > 1){
+			throw new IllegalArgumentException("Expected defaultRatio value between 0 and 1, got " + defaultRatio);
+		}
+		if(periodicSleep < 0){
+			throw new IllegalArgumentException("Expected non-negative periodicSleep value, got " + periodicSleep);
+		}
+		if(priceUpdateSleep < 0){
+			throw new IllegalArgumentException("Expected non-negative priceUpdateSleep value, got " + priceUpdateSleep);
+		}
+		if(offerCheckSleep < 0){
+			throw new IllegalArgumentException("Expected non-negative offerCheckSleep value, got " + offerCheckSleep);
+		}
+
+		botID = botInfo.getString("botID");
+		String apiKey = botInfo.getString("APIKey");
+		String apiToken = botInfo.getString("APIToken");
+		username = botInfo.getString("botUsername");
+		password = botInfo.getString("botPassword");
+		sharedSecret = botInfo.getString("sharedSecret");
+		identitySecret = botInfo.getString("identitySecret");
+
+		backpackTF = disconnectBPTF ? NoListingsBackpackTF.open(apiKey, apiToken, fallbackPath) : BackpackTF.open(apiKey, apiToken, fallbackPath);
+		steam = Steam.open();
 
 		AcceptabilityFunction acceptabilityFunction = getCustomFunction(AcceptabilityFunction.class, functions.getJSONObject("acceptabilityFunction"));
 		BuyListingPriceFunction buyListingPriceFunction = getCustomFunction(BuyListingPriceFunction.class, functions.getJSONObject("buyListingPriceFunction"));
-		HatPriceFunction hatPriceFunction = getCustomFunction(HatPriceFunction.class, functions.getJSONObject("hatPriceFunction"));
+		HatPriceFunction hatPriceFunction = getCustomFunction(HatPriceFunction.class, functions.getJSONObject("sellListingPriceFunction"));
 		ListingDescriptionFunction listingDescriptionFunction = getCustomFunction(ListingDescriptionFunction.class, functions.getJSONObject("listingDescriptionFunction"));
 		KeyScrapRatioFunction keyScrapRatioFunction = autoKeyScrap ? KeyScrapRatioFunction.backpackTFRatio() : KeyScrapRatioFunction.customRatio(botSettings.getInt("keyScrapRatio"));
 		FunctionSuite suite = new FunctionSuite(hatPriceFunction, buyListingPriceFunction, listingDescriptionFunction, acceptabilityFunction, keyScrapRatioFunction);
@@ -151,7 +214,8 @@ public class Main{
 		try{
 			elonMusk = TradingBot.fromJSONRepresentation(new JSONObject(readFile(botReadPath)), backpackTF, suite);
 			System.out.println("Read bot data from " + botReadPath);
-		} catch(FileNotFoundException e){
+		} catch(NoSuchFileException e){
+			System.out.println("No bot file found at " + botReadPath + ". Initializing automatically.");
 			try{
 				if(constructWithHats){
 					elonMusk = TradingBot.autoCreate(botID, backpackTF, steam, defaultRatio, suite);
@@ -160,14 +224,16 @@ public class Main{
 					elonMusk = TradingBot.botWithoutHats(botID, backpackTF, suite);
 					System.out.println("Initialized bot automatically.");
 				}
+				recalculateOnStartup = true;
 			} catch(IOException f){
 				throw new UncheckedIOException(f);
 			}
 		} catch(IOException e){
 			throw new UncheckedIOException(e);
 		}
+		checkForUpdatePricesError();
 		System.out.println(autoKeyScrap ? "Calculated key-to-scrap ratio to be " + elonMusk.getKeyScrapRatio() : "Using custom key-to-scrap ratio of " + botSettings.getInt("keyScrapRatio"));
-		System.out.println("Bot has " + elonMusk.getHats().size() + " hats and " + elonMusk.getBuyListings().size() + " buy listings.");
+		System.out.println("Bot is selling " + elonMusk.getHats().size() + " items and buying " + elonMusk.getBuyListings().size() + " items.");
 		backpackTF.resetUsed();
 	}
 
@@ -178,7 +244,7 @@ public class Main{
 	};
 
 	private static final Consumer<BackpackTFConnection> callback = (BackpackTFConnection conn) -> {
-		BackpackTF connection = (BackpackTF)conn;
+		LoggingBackpackTFConnection connection = (LoggingBackpackTFConnection)conn;
 		IOException ioe = connection.lastThrownIOException();
 		if(ioe != null){
 			log(ioe);
@@ -198,11 +264,11 @@ public class Main{
 		}
 	};
 
-	//Possible user input options: exit, save, sendlistings, getid, readhats, updateprices, recalculateprices
 	private static final Runnable userInput = () -> {
 		Scanner keyboard = new Scanner(System.in);
 		while(keyboard.hasNextLine()){
-			String input = keyboard.nextLine().toLowerCase();
+			String normalizedInput = keyboard.nextLine();
+			String input = normalizedInput.toLowerCase();
 			if(input.equals("exit")){
 				exit();
 			} else if(input.equals("sendlistings")){
@@ -212,68 +278,161 @@ public class Main{
 			} else if(input.equals("getid")){
 				checkHatIDs();
 				save();
-			} else if(input.startsWith("readhats")){
-				if(input.equals("readhats")){
+			} else if(input.startsWith("readitems")){
+				int before = elonMusk.getHats().size();
+				if(input.equals("readitems")){
 					try{
 						elonMusk.readHatsFromInventory(steam, defaultRatio);
-						System.out.println("Read hats from inventory.");
+						int difference = elonMusk.getHats().size() - before;
+						if(difference >= 0){
+							System.out.println("Read " + difference + " items from inventory.");
+						} else {
+							System.out.println("Removed " + (-difference) + " items no longer in inventory.");
+						}
+
 					} catch(IOException e){
 						log(e);
-						System.out.println("Failed to read hats from inventory.");
+						System.out.println("Failed to read items from inventory. See " + logFile + " for more details.");
 					}
 				} else {
-					String toParse = input.substring("readhats".length() + 1);
+					String toParse = input.substring("readitems".length() + 1);
 					try{
 						elonMusk.readHatsFromInventory(steam, Double.parseDouble(toParse));
-						System.out.println("Read hats from inventory.");
+						int after = elonMusk.getHats().size();
+						System.out.println("Read " + (after - before) + " items from inventory.");
 					} catch(NumberFormatException e){
 						System.err.println("Error: could not parse " + toParse);
 					} catch(IOException e){
 						log(e);
-						System.out.println("Failed to read hats from inventory.");
+						System.out.println("Failed to read items from inventory. See " + logFile + " for more details.");
 					}
 				}
 				save();
-			} else if(input.equals("updateprices")){
+			} else if(input.equals("updateandfilter")){
 				updatePrices();
 				save();
 			} else if(input.equals("recalculateprices")){
-				recalculate();
-				save();
+				new Thread(() -> {
+					recalculate();
+					save();
+				}).start();
 			} else if(input.equals("keyscrapratio")){
 				System.out.println("Current key-to-scrap ratio is " + elonMusk.getKeyScrapRatio());
-			} else if(input.equals("numberhats")){
-				System.out.println("Bot has " + elonMusk.getHats().size() + " hats and " + elonMusk.getBuyListings().size() + " buy listings.");
+			} else if(input.equals("numberitems")){
+				System.out.println("Bot is selling " + elonMusk.getHats().size() + " items and buying " + elonMusk.getBuyListings().size() + " items.");
+			} else if(input.startsWith("iteminfo")){
+				String toParse = normalizedInput.substring("iteminfo".length());
+				Item query;
+				try{
+					query = parseItem(toParse);
+				} catch(IllegalArgumentException | NoSuchElementException e){
+					System.out.println("Error: " + e.getMessage());
+					continue;
+				}
+				Hat h = elonMusk.getHats().get(query);
+				BuyListing bl = elonMusk.getBuyListings().get(query);
+				if(h == null && bl == null){
+					System.out.println("Bot is neither buying nor selling " + query.getEffect().getName() + " " + query.getName());
+				} 
+				if(h != null){
+					System.out.println("Bot is selling this hat. Info:\n" + h.getJSONRepresentation().toString());
+				}
+				if(bl != null){
+					System.out.println("Bot is buying this hat. Info:\n" + bl.getJSONRepresentation().toString());
+				}
+			} else if(input.startsWith("itemprice")){
+				String toParse = normalizedInput.substring("itemprice".length());
+				Item query;
+				try{
+					query = parseItem(toParse);
+				} catch(IllegalArgumentException | NoSuchElementException e){
+					System.out.println("Error: " + e.getMessage());
+					continue;
+				}
+				Hat h = elonMusk.getHats().get(query);
+				BuyListing bl = elonMusk.getBuyListings().get(query);
+				if(h == null && bl == null){
+					System.out.println("Bot is neither buying nor selling " + query.getEffect().getName() + " " + query.getName());
+				} 
+				if(h != null){
+					try{
+						System.out.println("Bot is selling this hat for " + h.getPrice().valueString());
+					} catch(NonVisibleListingException e) {
+						System.out.println("Bot is selling this hat, but has not yet set a price.");
+					}
+				}
+				if(bl != null){
+					try{
+						System.out.println("Bot is buying this hat for " + bl.getPrice().valueString());
+					} catch(NonVisibleListingException e) {
+						System.out.println("Bot is buying this hat, but has not yet set a price.");
+					}
+				}
+			} else if(input.equals("sellprices")) {
+				if(elonMusk.getHats().size() == 0){
+					System.out.println("Bot is not selling any items.");
+				}
+				for(Hat h : elonMusk.getHats()){
+					try{
+						System.out.println(h.getEffect().getName() + " " + h.getName() + ": " + h.getPrice().valueString());
+					} catch(NonVisibleListingException e){
+						System.out.println(h.getEffect().getName() + " " + h.getName() + ": Price not set yet");
+					}
+				}
+			} else if(input.equals("buyprices")) {
+				if(elonMusk.getBuyListings().size() == 0){
+					System.out.println("Bot is not buying any items.");
+				}
+				for(BuyListing bl : elonMusk.getBuyListings()){
+					try{
+						System.out.println(bl.getEffect().getName() + " " + bl.getName() + ": " + bl.getPrice().valueString());
+					} catch(NonVisibleListingException e){
+						System.out.println(bl.getEffect().getName() + " " + bl.getName() + ": Price not set yet");
+					}
+				}
+			} else if(input.equals("botinfo")) {
+				System.out.println(botInfo.toString());
+			} else if(input.equals("botsettings")) {
+				System.out.println(botSettings.toString());
+			} else if(input.equals("functions")) {
+				System.out.println(functions.toString());
+			} else {
+				System.out.println("Unrecognized command: " + normalizedInput);
 			}
 		}
-		throw new RuntimeException("System.in was closed.");
+		throw new IllegalStateException("System.in was closed.");
 	};
 
 	private static final Runnable periodic = () -> {
 		while(true){
-			System.out.println("Periodic function has started.");
-			updatePrices();
+			if(recalculateOnStartup){
+				recalculate();
+				recalculateOnStartup = false;
+			}
 			checkHatIDs();
-			save();
-			recalculate();
-			save();
 			sendListings();
 			try{
 				Thread.sleep(periodicSleep);
 			} catch(InterruptedException e){
 				throw new RuntimeException("Periodic sleep was interrupted.", e);
 			}
+			System.out.println("Periodic function has started.");
+			updatePrices();
+			save();
+			recalculate();
+			save();
 		}
 	};
 
 	private static final Runnable nativeOfferChecking = () -> {
 		Process offerManagement;
 		try{
-			offerManagement = Runtime.getRuntime().exec(OFFER_CHECK_ARGUMENT);
+			offerManagement = Runtime.getRuntime().exec(new String[]{OFFER_CHECK_ARGUMENT_1, OFFER_CHECK_ARGUMENT_2, username, password, sharedSecret, identitySecret, ((Integer)offerCheckSleep).toString()});
 		} catch(IOException e){
-			throw new UncheckedIOException(OFFER_CHECK_ARGUMENT + " execution failed.", e);
+			throw new UncheckedIOException(OFFER_CHECK_ARGUMENT_2 + " execution failed.", e);
 		}
 		Scanner input = new Scanner(offerManagement.getInputStream());
+		Scanner errInput = new Scanner(offerManagement.getErrorStream());
 		PrintStream output = new PrintStream(offerManagement.getOutputStream(), true);
 		String next;
 		while(input.hasNextLine()){
@@ -283,12 +442,15 @@ public class Main{
 			try {
 				parsedOffer = new JSONObject(next);
 			} catch(JSONException e){
-				System.err.println("Native offer checking encountered an error:\n" + next);
-				offerManagement.destroy();
-				break;
+				String message = next;
+				while(input.hasNextLine()){
+					message += "\n" + input.nextLine();
+				}
+				//System.err.println("Native offer checking encountered an error:\n" + message);
+				throw new RuntimeException("Native offer checking encountered an error:\n" + message);
 			}
 			System.out.println("\nWe received an offer.");
-			TradeOffer offer = elonMusk.evaluateTrade(parsedOffer);
+			TradeOffer offer = elonMusk.evaluateTrade(parsedOffer, forgiveness, canHold, ownerIDs);
 			System.out.println("Our value: " + offer.getOurValue() + ", Their value: " + offer.getTheirValue());
 			TradeOfferResponse response = offer.getResponse();
 			String passive = "";
@@ -311,12 +473,12 @@ public class Main{
 			String result = input.nextLine();
 			//String result = "success";
 			if(result.equals("success")){
-				System.out.println("The offer was " + passive.toLowerCase());
+				System.out.println("The offer was " + passive.toLowerCase() + ".");
 			} else {
 				System.out.println("There was an error, the offer may or may not have been responded to.");
 				System.err.println(result);
 			}
-			elonMusk.updateItemsAfterOffer(offer);
+			elonMusk.updateItemsAfterOffer(offer, defaultRatio);
 			String data = offer.getData();
 			Date time = new Date();
 			try{
@@ -325,17 +487,30 @@ public class Main{
 				System.out.println("The offer could not be documented.");
 				e.printStackTrace();
 			}
+			new Thread(() -> {
+				try{
+					Thread.sleep(60000);
+				} catch(InterruptedException e){
+					throw new RuntimeException("Sleep before checking item IDs was interrupted.");
+				}
+				checkHatIDs();
+			}).start();
 		}
-		throw new IllegalStateException("Native offer checking has stopped working.");
+		if(errInput.hasNextLine()){
+			throw new IllegalStateException("Native offer checking encountered an error:\n" + errInput.useDelimiter("\\Z").next());
+		}
+		throw new IllegalStateException("Native offer checking stopped unexpectedly.");
 	};
 
 	private static void recalculate(){
 		successes = 0;
-		System.out.println("Recalculating prices for " + elonMusk.getHats().size() + " hats and " + elonMusk.getBuyListings().size() + " buy listings.");
-		System.out.print("(. indicates success, ' indicates failure for an inidividual listing)");
+		System.out.println("Recalculating prices for " + elonMusk.getHats().size() + " sell listings and " + elonMusk.getBuyListings().size() + " buy listings.");
+		System.out.println("(. indicates success, ' indicates failure for an inidividual listing)");
+		backpackTF.resetIOException();
+		backpackTF.resetUsed();
 		elonMusk.recalculatePrices(backpackTF, callback);
 		int failures = (elonMusk.getHats().size() + elonMusk.getBuyListings().size() - successes);
-		System.out.println("Finished recalculating prices. " + successes + " successes and " + failures + " failures.");
+		System.out.println("\nFinished recalculating prices. " + successes + " successes and " + failures + " failures.");
 		if(failures > 0){
 			System.out.println("Check " + logFile + " for details on failures.");
 		}
@@ -359,8 +534,13 @@ public class Main{
 					continue;
 				}
 				AnnotatedType[] types = m.getAnnotatedParameterTypes();
-				if(types.length != parameters.length()){
-					throw new JSONException("Specified method for " + cl.toString() + " takes " + types.length + " parameters, but " + parameters.length() + " was provided.");
+				if(types.length == parameters.length() + 1){
+					Object[] temp = methodInputs;
+					methodInputs = new Object[methodInputs.length + 1];
+					System.arraycopy(temp, 0, methodInputs, 0, temp.length);
+					methodInputs[methodInputs.length - 1] = botID;
+				} else if(types.length != parameters.length()){
+					throw new JSONException("Specified method for " + cl.toString() + " takes " + types.length + " parameters, but " + parameters.length() + " were provided.");
 				}
 				try{
 					return (T)m.invoke(null, methodInputs);
@@ -399,23 +579,13 @@ public class Main{
 			write(botObject.toString(), botPath);
 			System.out.println("Saved bot's data.");
 		} catch(IOException e){
-			System.out.println("Failed to save bot data.");
 			log(e);
-		}
-	}
-
-	private static String readFile(String path) throws IOException {
-  		return new String(Files.readAllBytes(Paths.get(path)));
-	}
-
-	private static void write(String content, String path) throws IOException {
-		try(BufferedWriter writer = new BufferedWriter(new FileWriter(path))){
-	    	writer.write(content);	
+			System.out.println("Failed to save bot data. See " + logFile + " for more details.");
 		}
 	}
 
 	private static String resolveConfigPath(){
-		List<String> pathsToInspect = List.of(".", "..", "./src", "../src");
+		List<String> pathsToInspect = List.of(".", "..", "./src", "../src", "../config", "./config");
 		for(String s : pathsToInspect){
 			String dir = s + File.separator + "config";
 			if(Files.exists(Path.of(dir))){
@@ -433,10 +603,10 @@ public class Main{
 	private static void sendListings(){
 		try{
 			elonMusk.sendListings(backpackTF);
-			System.out.println("Sent listings to Backpack.tf.");
+			System.out.println(backpackTF instanceof BackpackTF ? "Sent listings to Backpack.tf." : "Bot is in no-send mode; listings were not sent to Backpack.tf.");
 		} catch(IOException e){
 			log(e);
-			System.out.println("Failed to send listings.");
+			System.out.println("Failed to send listings. See " + logFile + " for more details.");
 		}
 	}
 
@@ -446,28 +616,61 @@ public class Main{
 			System.out.println("Verified hat IDs.");
 		} catch(IOException e){
 			log(e);
-			System.out.println("Failed to verify hat IDs.");
+			System.out.println("Failed to verify hat IDs. See " + logFile + " for more details.");
 		}
 	}
 
 	private static void updatePrices(){
 		try{
 			elonMusk.updateAndFilter(backpackTF);
-			System.out.println("Updated prices.");
+			checkForUpdatePricesError();
+			System.out.println("Updated community prices and filtered buy listings. Bot is now buying " + elonMusk.getBuyListings().size() + " items.");
 		} catch(IOException e){
 			log(e);
-			System.out.println("Failed to update prices.");
+			System.out.println("Failed to update prices. See " + logFile + " for more details.");
 		}
+	}
+
+	private static void checkForUpdatePricesError(){
+		if(backpackTF.lastThrownIOException() != null){
+			IOException ioe = backpackTF.lastThrownIOException();
+			backpackTF.resetIOException();
+			if(ioe instanceof IIOException){
+				System.out.println("Failed to save fallback prices. See " + logFile + " for more details.");
+				log(ioe.getCause());
+			} else {
+				System.out.println("Failed to get community prices from Backpack.tf. Using fallback located at " + fallbackPath  + 
+					". See " + logFile + " for more details.");
+				log(ioe);
+			}
+		}
+	}
+
+	private static Item parseItem(String toParse){
+		Matcher m = Pattern.compile("\\s*\"(.*?)\"\\s*\"(.*?)\"\\s*").matcher(toParse);
+		if(!m.matches()){
+			throw new IllegalArgumentException("This command requires two quoted arguments.");
+		}
+		String rawEffect = m.group(1);
+		String name = m.group(2);
+		Effect effect;
+		try{
+			effect = Effect.forInt(Integer.parseInt(rawEffect));
+		} catch(NumberFormatException e){
+			effect = Effect.forName(rawEffect);
+		}
+		return new Item(name, Quality.UNUSUAL, effect);
 	}
 
 	private static void log(Throwable t){
 		StringWriter sw = new StringWriter();
 		t.printStackTrace(new PrintWriter(sw));
-		log(sw.toString());
+		log(LocalDateTime.now().toString() + ": " + sw.toString());
 	}
 
 	private static void log(String information){
 		try {
+			ensurePathExists(logFile);
 		    Path path = Paths.get(logFile);
 		    Files.write(path, Arrays.asList(information), StandardCharsets.UTF_8,
 		        Files.exists(path) ? StandardOpenOption.APPEND : StandardOpenOption.CREATE);
@@ -492,6 +695,7 @@ public class Main{
 	}
 
 	public static void main(String[] args) throws IOException {
+		checkNodeJS();
 		inputThread = new Thread(userInput, "User input");
 		inputThread.setUncaughtExceptionHandler(handler);
 		botThread = new Thread(periodic, "Periodic function thread");
@@ -501,5 +705,13 @@ public class Main{
 		inputThread.start();
 		offerThread.start();
 		botThread.start();
+	}
+
+	private static void checkNodeJS(){
+		try{
+			Runtime.getRuntime().exec("node");
+		} catch(IOException e){
+			throw new IllegalStateException("Node.js is not installed or has not been added to the PATH.", e);
+		}
 	}
 }
