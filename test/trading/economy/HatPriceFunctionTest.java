@@ -15,9 +15,9 @@ public class HatPriceFunctionTest {
 
 	@Test
 	public void testNegativeExponentialFunction() throws IOException {
-		HatPriceFunction sampleFunction = HatPriceFunction.negativeExponentialFunction(0.9, 0.1, 2.5);
+		HatPriceFunction sampleFunction = HatPriceFunction.negativeExponentialFunction(0.9, 0.1, 4.0);
 		Hat boughtToday = new Hat("Backwards Ballcap", Effect.forName("Scorching Flames"), new PriceRange(new Price(19, 0), new Price(21, 0), 180), new Price(9, 0), LocalDate.now());
-		Hat mid = new Hat("Backwards Ballcap", Effect.forName("Scorching Flames"), new PriceRange(new Price(19, 0), new Price(21, 0), 180), new Price(9, 0), LocalDate.now().minusDays(10));
+		Hat mid = new Hat("Backwards Ballcap", Effect.forName("Scorching Flames"), new PriceRange(new Price(19, 0), new Price(21, 0), 180), new Price(9, 0), LocalDate.now().minusDays(5));
 		Hat older = new Hat("Backwards Ballcap", Effect.forName("Scorching Flames"), new PriceRange(new Price(19, 0), new Price(21, 0), 180), new Price(9, 0), LocalDate.of(-44, 3, 15));
 		SampleBackpackTFConnection connection = new SampleBackpackTFConnection((Item i) -> {
 			if(!i.equals(new Item("Backwards Ballcap", Quality.UNUSUAL, Effect.forName("Scorching Flames")))) {
@@ -27,7 +27,7 @@ public class HatPriceFunctionTest {
 		});
 		assertEquals(sampleFunction.calculatePrice(boughtToday, connection, 900), new Price(18, 0));
 		assertEquals(sampleFunction.calculatePrice(older, connection, 900), new Price(11, 0));
-		assertTrue(sampleFunction.calculatePrice(mid, connection, 900).compareTo(HatPriceFunction.negativeExponentialFunction(0.9, 0.1, 3.0).calculatePrice(mid, connection, 900)) > 0);
+		assertTrue(sampleFunction.calculatePrice(mid, connection, 900).compareTo(HatPriceFunction.negativeExponentialFunction(0.9, 0.1, 5.0).calculatePrice(mid, connection, 900)) > 0);
 	}
 	
 	@Test

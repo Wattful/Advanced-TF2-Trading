@@ -21,7 +21,7 @@ public class TradeOfferTest {
 	private static final TradeOffer offer1;
 	private static final TradeOffer offer2;
 	private static final Hat ballcap = new Hat("Backwards Ballcap", Effect.forName("Scorching Flames"), new PriceRange(new Price(50, 0)), new Price(35, 0), "C", LocalDate.now());
-	private static final BuyListing lid = new BuyListing("Lumbricus Lid", Effect.forName("Massed Flies"), new PriceRange(new Price(11, 0)));
+	private static final BuyListing lid = new BuyListing("War Pig", Effect.forName("Massed Flies"), new PriceRange(new Price(11, 0)));
 	static {
 		try {
 			sampleOffer = new JSONObject(new String(Files.readAllBytes(Paths.get("./test/trading/economy/sampleOffer.json"))));
@@ -97,12 +97,12 @@ public class TradeOfferTest {
 		assertEquals(offer1.itemsToReceive(), Map.of(
 				new Item("Refined Metal", Quality.UNIQUE), 9, 
 				new Item("Reclaimed Metal", Quality.UNIQUE), 3, 
-				new Item("Lumbricus Lid", Quality.UNUSUAL, Effect.forName("Massed Flies")), 4500)
+				new Item("War Pig", Quality.UNUSUAL, Effect.forName("Massed Flies")), 4500)
 		);
 		assertEquals(offer2.itemsToReceive(), Map.of(
 				new Item("Refined Metal", Quality.UNIQUE), 9, 
 				new Item("Reclaimed Metal", Quality.UNIQUE), 3, 
-				new Item("Lumbricus Lid", Quality.UNUSUAL, Effect.forName("Massed Flies")), 4500)
+				new Item("War Pig", Quality.UNUSUAL, Effect.forName("Massed Flies")), 4500)
 		);
 	}
 	
@@ -137,7 +137,7 @@ public class TradeOfferTest {
 		testExpectedException(() -> {TradeOffer.fromJSON(sampleOffer, new ListingHashSet<Hat>(List.of()), null, keyScrapRatio);}, NullPointerException.class);
 		testExpectedException(() -> {TradeOffer.fromJSON(sampleOffer, new ListingHashSet<Hat>(List.of()), new ListingHashSet<BuyListing>(List.of()), 0);}, IllegalArgumentException.class);
 		testExpectedException(() -> {TradeOffer.fromJSON(new JSONObject(), new ListingHashSet<Hat>(List.of()), new ListingHashSet<BuyListing>(List.of()), keyScrapRatio);}, JSONException.class);
-		testExpectedException(() -> {TradeOffer.fromJSON(sampleOffer, new ListingHashSet<Hat>(List.of()), new ListingHashSet<BuyListing>(List.of()), keyScrapRatio, -1, true, null);}, NullPointerException.class);
+		testExpectedException(() -> {TradeOffer.fromJSON(sampleOffer, new ListingHashSet<Hat>(List.of()), new ListingHashSet<BuyListing>(List.of()), keyScrapRatio, -1, true, null);}, IllegalArgumentException.class);
 	}
 	
 	@Test

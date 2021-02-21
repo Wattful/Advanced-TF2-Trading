@@ -132,17 +132,19 @@ public interface AcceptabilityFunction{
 			throw new NullPointerException();
 		}
 		boolean nameMatches = false;
-		for(String s : names){
-			try {
-				Matcher m = Pattern.compile(s).matcher(name);
-				if(m.matches()){
-					nameMatches = true;
-					break;
-				}
-			} catch(IllegalArgumentException e){
-				if(s.equals(name)){
-					nameMatches = true;
-					break;
+		if(names != null) {
+			for(String s : names){
+				try {
+					Matcher m = Pattern.compile(s).matcher(name);
+					if(m.matches()){
+						nameMatches = true;
+						break;
+					}
+				} catch(IllegalArgumentException e){
+					if(s.equals(name)){
+						nameMatches = true;
+						break;
+					}
 				}
 			}
 		}

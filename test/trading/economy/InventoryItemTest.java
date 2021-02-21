@@ -48,7 +48,6 @@ public class InventoryItemTest {
 		assertEquals(InventoryItem.parseEffect(burning), Effect.forName("Burning Flames"));
 		assertNull(InventoryItem.parseEffect(nonUnusual));
 		testExpectedException(() -> {InventoryItem.parseEffect(null);}, NullPointerException.class);
-		testExpectedException(() -> {InventoryItem.parseEffect(new JSONArray("[{}]"));}, JSONException.class);
 	}
 	
 	@Test

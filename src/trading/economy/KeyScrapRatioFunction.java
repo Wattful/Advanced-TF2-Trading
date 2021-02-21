@@ -32,7 +32,7 @@ public interface KeyScrapRatioFunction {
 		};
 	}
 
-	/**Returns a KeyScrapRatioFunction which return the middle of Backpack.tf's community key-to-scrap ratio.
+	/**Returns a KeyScrapRatioFunction which returns the middle of Backpack.tf's community key-to-scrap ratio.
 	@return the described KeyScrapRatioFunction.
 	*/
 	public static KeyScrapRatioFunction backpackTFRatio(){

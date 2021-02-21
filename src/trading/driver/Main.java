@@ -20,90 +20,12 @@ import javax.imageio.IIOException;
 
 import static trading.driver.FileUtils.*;
 
-//TODO: 
-//update unittests
+//TODO:
 
-//TOTEST:
-//remove backpacktf and steam unit tests
+//Possible refactorings: include options on whether to base on upper, lower, or middle, messaging feature, 
+//have bot not updateandfilter on startup, fix behavior with unpriced hats
 
-//DONE:
-//CheckHatIDs after offer acceptance - set timeout?
-//Remove ID from trade records
-//think about setting external names of buylisting and hatpricefunction
-//Think about better logging for BackpackTF.getPrices
-//fix edge case of accepting an offer w/ unusual w/o buylisting,
-//have readhats delete unused hats
-//fix native offer checking config file search,
-//add commands to dump settings
-//consider command to dump all prices, 
-//Spawn new thread for manual recalculation
-//Fix synchronization for price recalculation
-//add some form of price object caching or fallback, 
-//fix file writes failing for nonexistent folders,
-//Recalculate prices upon automatic constructions
-//checkNodeJS
-//Add output for hats added from readitems, 
-//make update prices clearer, 
-//Think about skipping periodic function on startup (and having this functionality be done upon constructing the bot), 
-//Regex in AcceptabilityFunction
-//add npm requirements file
-//remove old files from tracking
-//Add precondition checks for bot settings values.
-//Remove trading.economy.inventoryItem from trade records,
-//fix native offer checking bug
-//add sample offers
-//add default config files
-//sending listings to bptf
-
-//Unit tests updates to make:
-//Regex in AcceptabilityFunction
-//Double in updateItemsAfterOffer
-//Removing hats in readHatsFromInventory
-//Item equals()
-//KeyScrapRatioFunction invalid currency
-
-//Possible refactorings: include options on whether to base on upper, lower, or middle, consider a messaging feature
-
-/*
-Config file specs:
-1. botInfo.json:
-	botID: bot's steam ID
-	botUsername: bot's steam username
-	botPassword: bot's steam password
-	sharedSecret: bot's shared secret
-	identitySecret: bot's identity secret
-	APIKey: bot's Backpack.tf API key
-	APIToken: bot's Backpack.tf API token
-	
-2. botSettings.json:
-	ownerIDs: (JSONArray of String) owner IDs to accept automatically from.
-	canHold: whether the bot can hold trades.
-	forgiveness: forgiveness value.                                                           precondition: 0 <= x <= 1
-	keyScrapRatio: int indicating hardcoded value or "auto" to automatically update.          
-	botReadPath: location to read trading bot data from.
-	botWritePath: location to write trading bot data to.
-	constructWithHats: whether to automatically include hats in bot inventory when automatically constructing bot.
-	defaultRatio: default purchase price ratio for hats found in bot's inventory.             precondition: 0 <= x <= 1
-	acceptPath: path to write accepted log files to.
-	declinePath: path to write declined log files to.
-	holdPath: path to write held log files to.
-	logFile: path for exception log file, if any.
-	periodicSleep: time slept in between periodic actions                                     precondition: >= 0
-	priceUpdateSleep: time slept after calling Backpack.tf listings API.                      precondition: >= 0
-	disconnectBPTF: if true, don't send listings to Backpack.tf.
-	offerCheckSleep: how often to check trade offers.                                          precondition: >= 0
-	fallback: fallback path for backpack.tf prices.
-
-3. functions.json:
-	acceptabilityFunction
-	buyListingPriceFunction
-	sellListingPriceFunction
-	listingDescriptionFunction
-
-	Each of these point to a JSONObject. This object should have two keys: a "name" key, which points to
-	 either the fully-qualified name of a custom function or the name of one of the provided functions,
-	and aa "parameters" key, which provides arguments for either the provided function or a constructor for the custom function class.
-	"parameters" can be omitted if the function or constructor has no arguments.
+/**The program's main class.
 */
 
 public class Main{

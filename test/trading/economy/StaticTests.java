@@ -45,7 +45,7 @@ public class StaticTests {
 			func.execute();
 			fail();
 		} catch(Exception e) {
-			if(!exceptionType.isAssignableFrom(exceptionType)) {
+			if(!exceptionType.isAssignableFrom(e.getClass())) {
 				throw new RuntimeException(e);
 			}
 		}

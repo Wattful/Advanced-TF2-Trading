@@ -99,6 +99,14 @@ public class AcceptabilityFunctionTest {
 		assertFalse(determineFromPair(acceptList, older));
 		assertFalse(determineFromPair(acceptList, badCurrency));
 		
+		AcceptabilityFunction regex = AcceptabilityFunction.checkType(true, List.of(".*p.*"), false, List.of());
+		assertTrue(determineFromPair(regex, standardHat));
+		assertFalse(determineFromPair(regex, lowPrice));
+		assertFalse(determineFromPair(regex, highPrice));
+		assertFalse(determineFromPair(regex, highRange));
+		assertTrue(determineFromPair(regex, older));
+		assertFalse(determineFromPair(regex, badCurrency));
+		
 		testExpectedException(() -> {noRestrictions.determineAcceptability(null, "", Effect.forInt(4), keyScrapRatio);}, NullPointerException.class);
 		testExpectedException(() -> {noRestrictions.determineAcceptability(standardHat.second(), null, Effect.forInt(4), keyScrapRatio);}, NullPointerException.class);
 		testExpectedException(() -> {noRestrictions.determineAcceptability(standardHat.second(), "", null, keyScrapRatio);}, NullPointerException.class);

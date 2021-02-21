@@ -5,5 +5,5 @@
 ], "itemsToReceive": [
 	{"id": "D", "market_name": "Refined Metal", "app_data": {"quality": 6}, "descriptions": []},
 	{"id": "E", "market_name": "Reclaimed Metal", "app_data": {"quality": 6}, "descriptions": []},
-	{"id": "F", "market_name": "Lumbricus Lid", "app_data": {"quality": 5}, "descriptions": [{"color": "ffd700", "value": "Unusual Effect: Massed Flies"}]}
+	{"id": "F", "market_name": "War Pig", "app_data": {"quality": 5}, "descriptions": [{"color": "ffd700", "value": "Unusual Effect: Massed Flies"}]}
 ], "partner": "Halibuttcheeks"}

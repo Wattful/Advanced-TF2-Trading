@@ -40,13 +40,13 @@ public class ItemTest {
 	
 	@Test
 	public void testHash() {
-		testHashCode(eureka, cap, fakeUnusual, new Item("Strange Eureka Effect", Quality.STRANGE), new Item("Team Captain", Quality.UNUSUAL, Effect.forInt(11)), new Item("War Pig", Quality.UNIQUE, Effect.forInt(34)));
+		testHashCode(eureka, cap, fakeUnusual, new Item("Strange EUREKA effect", Quality.STRANGE), new Item("Team Captain", Quality.UNUSUAL, Effect.forInt(11)), new Item("War Pig", Quality.UNIQUE, Effect.forInt(34)));
 	}
 	
 	@Test
 	public void testEquality() {
 		testEquals(
-				pair(eureka, new Item("Strange Eureka Effect", Quality.STRANGE)),
+				pair(eureka, new Item("Strange EUREKA effect", Quality.STRANGE)),
 				pair(cap, new Item("Team Captain", Quality.UNUSUAL, Effect.forInt(11))),
 				pair(fakeUnusual, new Item("War Pig", Quality.UNIQUE, Effect.forInt(99)))
 		);

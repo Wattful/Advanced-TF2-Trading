@@ -82,6 +82,14 @@ public class FunctionSuiteTranslatorsTest {
 		assertFalse(determineFromPair(acceptList, older));
 		assertFalse(determineFromPair(acceptList, badCurrency));
 		
+		AcceptabilityFunction regex = FunctionSuiteTranslators.checkType(true, new JSONArray("[\".*p.*\"]"), false, new JSONArray());
+		assertTrue(determineFromPair(regex, standardHat));
+		assertFalse(determineFromPair(regex, lowPrice));
+		assertFalse(determineFromPair(regex, highPrice));
+		assertFalse(determineFromPair(regex, highRange));
+		assertTrue(determineFromPair(regex, older));
+		assertFalse(determineFromPair(regex, badCurrency));
+		
 		testExpectedException(() -> {FunctionSuiteTranslators.checkType(true, new JSONArray("[{}]"), true, new JSONArray("[62]"));}, JSONException.class);
 		testExpectedException(() -> {FunctionSuiteTranslators.checkType(true, new JSONArray("[\"Backwards Ballcap\"]"), true, new JSONArray("[{}]"));}, JSONException.class);
 		
@@ -131,7 +139,7 @@ public class FunctionSuiteTranslatorsTest {
 		
 		testExpectedException(() -> {FunctionSuiteTranslators.descriptionWithSayings(true, null);}, NullPointerException.class);
 		testExpectedException(() -> {FunctionSuiteTranslators.descriptionWithSayings(true, new JSONArray());}, IllegalArgumentException.class);
-		testExpectedException(() -> {FunctionSuiteTranslators.descriptionWithSayings(true, new JSONArray("[{}]"));}, IllegalArgumentException.class);
+		testExpectedException(() -> {FunctionSuiteTranslators.descriptionWithSayings(true, new JSONArray("[{}]"));}, JSONException.class);
 		
 		testExpectedException(() -> {before.generateDescription(null);}, NullPointerException.class);
 		testExpectedException(() -> {before.generateDescription(new Hat("Anger", Effect.forName("Massed Flies"), new PriceRange(new Price(10, 0), new Price(12, 0), 180), new Price(8, 0), "KJ", LocalDate.of(2021, 1, 20)));}, NonVisibleListingException.class);
