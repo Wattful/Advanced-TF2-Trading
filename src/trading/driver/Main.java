@@ -20,7 +20,7 @@ import javax.imageio.IIOException;
 
 import static trading.driver.FileUtils.*;
 
-//TODO:
+//TODO: Test custom function implementations
 
 //Possible refactorings: include options on whether to base on upper, lower, or middle, messaging feature, 
 //have bot not updateandfilter on startup, fix behavior with unpriced hats
@@ -445,10 +445,11 @@ public class Main{
 		if(parameters == null){
 			parameters = new JSONArray();
 		}
-		Method[] methods = Stream.concat(Arrays.stream(cl.getDeclaredMethods()), Arrays.stream(FunctionSuiteTranslators.class.getDeclaredMethods())).toArray(Method[]::new);
-		List<Object> tmp = parameters.toList();
-		tmp.replaceAll((Object in) -> {return JSONObject.NULL.equals(in) ? null : in;});
-		Object[] methodInputs = tmp.toArray();
+		Method[] methods = Stream.concat(Arrays.stream(FunctionSuiteTranslators.class.getDeclaredMethods()), Arrays.stream(cl.getDeclaredMethods())).toArray(Method[]::new);
+		Object[] methodInputs = new Object[parameters.length()];
+		for(int i = 0; i < parameters.length(); i++){
+			methodInputs[i] = parameters.isNull(i) ? null : parameters.get(i); 
+		}
 		for(Method m : methods){
 			//An assumption is made that no two default implementation methods will have the same name. This is OK as I have control over it.
 			if(m.getName().equalsIgnoreCase(name)){
@@ -479,12 +480,12 @@ public class Main{
 			}
 			customClass = (Class<? extends T>)qm;
 		} catch(ClassNotFoundException e){
-			throw new JSONException("No default implementation method for " + cl.toString() + " or class found with name " + name);
+			throw new JSONException("No default implementation method or class for " + cl.toString() + " found with name " + name);
 		}
 		for(Constructor<?> cons : customClass.getConstructors()){
 			Constructor<? extends T> constructor = (Constructor<? extends T>)cons;
 			AnnotatedType[] types = constructor.getAnnotatedParameterTypes();
-			if(types.length == parameters.length()){
+			if(types.length == methodInputs.length){
 				try{
 					return constructor.newInstance(methodInputs);
 				} catch(ReflectiveOperationException e){
