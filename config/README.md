@@ -18,18 +18,18 @@ Specifies several user-defined settings which do have valid default values.
 The keys for betSettings.json are:
 * `ownerIDs`: JSONArray of string. List of Steam IDs to be considered owners. Default value: `[]`.
 * `canHold`: boolean. Whether the bot can hold trades for manual review. Default value: `true`.
-* `forgiveness`: number. Forgivenss threshold (see "forgiveness" in behavior.md). Must be between 0 and 1, inclusive. Default value: `0.005`, or about 1 refined for every 10 keys.
+* `forgiveness`: number. Forgivenss threshold (see "forgiveness" in [behavior.md](../behavior.md)). Must be between 0 and 1, inclusive. Default value: `0.005`, or about 1 refined for every 10 keys.
 * `keyScrapRatio`: string or number. Custom key-to-scrap ratio for the bot to use, or "auto". If "auto" is used, the ratio is calculated using the Backpack.tf community prices, and is recalculated as part of the bot's periodic function. If custom ratio used, must be an integer. Default value: `"auto"`.
 * `botReadPath`: string. Path to read bot records from on initialization. Default value: `"../records/tradingBot.json"`.
 * `botWritePath`: string. Path to save bot records to. Default value: `"../records/tradingBot.json"`.
-* `constructWithHats`: boolean. Whether to read hats from the bot's inventory on initialization (see "initialization" in behavior.md). Default value: `true`.
-* `defaultRatio`: number. Ratio of community price to initialize sell listings' purchase price value to when purchase price is unknown (see "sell listings" in behavior.md). Must be between 0 and 1, inclusive. Default value: `0.75`.
+* `constructWithHats`: boolean. Whether to read hats from the bot's inventory on initialization (see "initialization" in [behavior.md](../behavior.md)). Default value: `true`.
+* `defaultRatio`: number. Ratio of community price to initialize sell listings' purchase price value to when purchase price is unknown (see "sell listings" in [behavior.md](../behavior.md)). Must be between 0 and 1, inclusive. Default value: `0.75`.
 * `acceptPath`: string. Path to save records of accepted trades to. Default value: `"../records/acceptedTrades"`.
 * `declinePath`: string. Path to save records of declined trades to. Default value: `"../records/declinedTrades"`.
 * `holdPath`: string. Path to save records of held trades to. Default value: `"../records/heldTrades"`.
 * `logFile`: string. File to save exception logs to. Default value: `"../records/log.txt"`.
-* `periodicSleep`: number. Milliseconds to sleep between periodic function calls (see "periodic activities" in behavior.md). Must be a non-negative integer. Default value: `86400000`, or one day.
-* `priceUpdateSleep`: number. Milliseconds to sleep between price function calls which use the Backpack.tf API (see "listings" in behavior.md). Must be a non-negative integer. Default value: `2500`.
+* `periodicSleep`: number. Milliseconds to sleep between periodic function calls (see "periodic activities" in [behavior.md](../behavior.md)). Must be a non-negative integer. Default value: `86400000`, or one day.
+* `priceUpdateSleep`: number. Milliseconds to sleep between price function calls which use the Backpack.tf API (see "listings" in [behavior.md](../behavior.md)). Must be a non-negative integer. Default value: `2500`.
 * `dontSendListings`: boolean. If true, bot will never send listings to Backpack.tf. This is useful for testing purposes. Default value: `false`.
 * `offerCheckSleep`: number. Milliseconds to sleep between checking for offers. Values lower than the default may lead to mysterious Steam API errors. Must be a non-negative integer. Default value: `15000`.
 * `fallback`: string or null. Optional path to store a fallback version of Backpack.tf community prices. Default value: `"../records/fallback.json"`.
@@ -40,15 +40,15 @@ Specifies the user-defined functions used by the bot.
 Each specified function has two keys: 
 * `name`: string. If a default implementation is being used, the name of the default implementation. If a custom implementation is being used, the fully-qualified name of the class implementing the function's interface.
 * `arguments`: JSONArray. Arguments to be passed to the function. If a custom implementation is being used, these arguments will be passed into its constructor.
-* 
+
 All default implementations use the average of the Backpack.tf community price for their calculations.
 
-### sellListingPriceFunction
+## sellListingPriceFunction
 Calculates the price of a sell listing.
 
 This function has four default implementations:
 
-#### fixedRatio
+### fixedRatio
 Parameters:
 * ratioOfPrice: number. Must be between 0 and 1, inclusive.
 
@@ -58,7 +58,7 @@ For example, if a hat's community price is 20 keys and ratioOfPrice is 0.75, it 
 
 This implementation does not use the Backpack.tf API.
 
-#### profitByRatio
+### profitByRatio
 Parameters:
 * ratioOfPrice: number. Must be between 0 and 1, inclusive.
 
@@ -68,7 +68,7 @@ For example, if a hat's community price is 20 keys, it was purchased for 14 keys
 
 This implementation does not use the Backpack.tf API.
 
-#### negativeExponentialFunction
+### negativeExponentialFunction
 Parameters:
 * maxRatio: number. Must be between 0 and 1, inclusive.
 * profitRatio: number. Must be between 0 and 1, inclusive.
@@ -100,11 +100,11 @@ If there are no other sell listings for the hat, it will set the price to defaul
 
 For example, if the calculated average if 20 keys, and undercutRatio is 0.05, then the hat's price will be set to 19 keys.
 
-### buyListingPriceFunction
+## buyListingPriceFunction
 Calculates the price of a buy listing.
 This function has four default implementations:
 
-#### fixedRatio
+### fixedRatio
 Parameters:
 * ratioOfPrice: number. Must be between 0 and 1, inclusive.
 
@@ -114,7 +114,7 @@ For example, if an items's community price is 20 keys and ratioOfPrice is 0.75, 
 
 This implementation does not use the Backpack.tf API.
 
-#### overcutByRatio
+### overcutByRatio
 Parameters:
 * listingsToConsider: number. Must be a positive integer.
 * overcutRatio: number.
@@ -130,19 +130,19 @@ If there are no other sell listings for the item, it will set the price to defau
 
 For example, if the calculated average if 20 keys, and overcutRatio is 0.05, then the item will be bought at 21 keys.
 
-### acceptabilityFunction
+## acceptabilityFunction
 Determines which unusual items the bot will make a buy listing for.
 All of these imeplementations, including acceptAll, reject items which have a price in a currency other than metal or keys, such as USD.
 In addition, the bot will never make a buy listing for a unpriced hat, as the acceptabilityFunction will not even be called for these hats.
 
 This function has four default implementations:
 
-#### acceptAll
+### acceptAll
 Parameters: none
 
 Accepts every hat, except those priced in a currency other than metal or keys.
 
-#### checkData
+### checkData
 An acceptabilityFunction which accepts a hat only if several conditions are satisfied, one for each paramter.
 
 Parameters:
@@ -151,7 +151,7 @@ Parameters:
 * maxRange: number. Checks that the range between the hat's high and low values is below maxRange keys. Negative value indicates no restriction.
 * lastUpdate: number. Checks that the hat's community price was updated within lastUpdate seconds. Negative or 0 value indicates no restriction.
 
-#### checkType
+### checkType
 Parameters:
 * nameMode: boolean.
 * names: null or JSONArray of string.
@@ -169,7 +169,7 @@ Effects can be specified as either an effect name or the effect's integer code (
 
 Note that regular expressions are accepted for hat's names (but NOT effects). For example, "Taunt:.\*" matches all unusual taunts.
 
-#### checkDataAndType
+### checkDataAndType
 Parameters:
 * minKeys: number.
 * maxKeys: number.
@@ -182,12 +182,12 @@ Parameters:
 
 Accepts a hat if it would be accepted by both the checkData and the checkType functions.
 
-### ListingDescriptionFunction
+## ListingDescriptionFunction
 Determines the Backpack.tf description to use for each listing.
 
 This function has two default implementations:
 
-#### simpleDescription
+### simpleDescription
 Parameters: none
 
 Returns a simple description 
@@ -199,7 +199,7 @@ More precisely, the description will take the following form:
 
 Note that "and X refined" will be omitted if the listing's Price has 0 refined.
 
-#### descriptionWithSayings
+### descriptionWithSayings
 Parameters:
 * placeBefore: boolean
 * sayings: JSONArray of string
@@ -209,14 +209,14 @@ with a saying placed before or after the simple description.
 The saying will be randomly selected each time from the provided array of strings.
 It will be placed before the simple description if placeBefore is true, otherwise it will be placed after the simple description.
 
-### How to specify custom functions
+## How to specify custom functions
 The user can specify custom implementations of each function. These implementations must be written in Java.
 
 To write a custom function, you must write a class which implements an interface corresponding to the function:
-* sellListingPriceFunction: [trading.economy.HatPriceFunction](../src/trading/economy/HatPriceFunction)
-* buyListingPriceFunction: [trading.economy.BuyListingPriceFunction](../src/trading/economy/BuyListingPriceFunction)
-* acceptabilityFunction: [trading.economy.AcceptabilityFunction](../src/trading/economy/AcceptabilityFunction)
-* listingDescriptionFunction: [trading.economy.ListingDescriptionFunction](../src/trading/economy/ListingDescriptionFunction)
+* sellListingPriceFunction: [trading.economy.HatPriceFunction](../src/trading/economy/HatPriceFunction.java)
+* buyListingPriceFunction: [trading.economy.BuyListingPriceFunction](../src/trading/economy/BuyListingPriceFunction.java)
+* acceptabilityFunction: [trading.economy.AcceptabilityFunction](../src/trading/economy/AcceptabilityFunction.java)
+* listingDescriptionFunction: [trading.economy.ListingDescriptionFunction](../src/trading/economy/ListingDescriptionFunction.java)
 
 See each interface for more specific documentation on how to write an implementation of that function.
 
