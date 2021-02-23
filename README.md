@@ -32,7 +32,7 @@ Once you have all of those, follow these steps to setup:
 1. Clone this repository.
 2. Navigate to the `src/nodejs` folder in the command line. Run `npm install`. This will install all Node.js dependencies.
 3. Install Java Dependencies (see "Java Dependencies" section)
-4. Specify settings in the bot's config files (see "Config Files" section and config/README.md)
+4. Specify settings in the bot's config files (see "Config Files" section and [config/README.md](config/README.md))
 
 Once you are finished, you are ready to build and run the bot.
 
@@ -74,7 +74,7 @@ Use maven or paste the XML into [JAR-download.com](https://jar-download.com/onli
 # Config Files
 This bot has several user options, which are read from config files. Default, non-filled-out versions of these configs are located in config/default. Before running the program for the first time, the user must fill out these config files and paste them into the config folder.
 
-For config file specs, see config/README.md.
+For config file specs, see [config/README.md](config/README.md).
 
 # Custom Functions
 The user can specify four functions which determine the bot's behavior. They are:
@@ -83,10 +83,10 @@ The user can specify four functions which determine the bot's behavior. They are
 3. acceptabilityFunction: Determines which items to place buy listings for (ie which ones are "acceptable")
 4. listingDescriptionFunction: Determines the description to use for a listing on Backpack.tf.
 
-Multiple default implementations for each of these functions are provided. Additionally, the user can write custom versions of these functions. See config/README.md for details.
+Multiple default implementations for each of these functions are provided. Additionally, the user can write custom versions of these functions. See [config/README.md](config/README.md) for details.
 
 # Bot Behavior
-For an exhaustive description of the bot's behavior, see behavior.md.
+For an exhaustive description of the bot's behavior, see [behavior.md](behavior.md).
 
 # Unit Tests
 This repo has JUnit 4 unit tests located in the tests folder.
