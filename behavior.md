@@ -18,7 +18,7 @@ The user can specify four custom functions which determine the bot's behavior. T
 4. listingDescriptionFunction: Determines the description to use for a listing on Backpack.tf.
 
 Multiple default implementations for each of these functions are provided. 
-Additionally, the user can write custom versions of these functions. See config/README.md for details.
+Additionally, the user can write custom versions of these functions. See [config/README.md](config/README.md) for details.
 
 # Listings
 The bot automatically creates and manages its buy and sell listings, calculating the prices using the buyListingPriceFunction and sellListingPriceFunction.
@@ -51,7 +51,7 @@ Otherwise, if either side has an item which is not on the bot's pricelist, and h
 
 If the offer is neither accepted or held, it is declined.
 
-The list of the bot's owners, its forgiveness threshold, and whether it can hold are all specified in botSettings.json. See config/README.md for details.
+The list of the bot's owners, its forgiveness threshold, and whether it can hold are all specified in botSettings.json. See [config/README.md](config/README.md) for details.
 
 ### Forgiveness
 The user can specify a forgiveness value, which is a real number between 0 and 1, inclusive. If the bot's value in a trade is higher than the partner's value, but its value is greater than (partnerValue * (1 - forgiveness)), then it will accept the trade anyway. This feature prevents high-value trades from being declined due to a trivial difference in value. A forgiveness value of 0 specifies no forgivenss, whereas a value of 1 would cause every trade to be accepted, regardless of each sides' value.
