@@ -79,8 +79,9 @@ where age is the number of days since this hat was bought.
 Using this function, the price of the hat will start at maxRatio percent of the community price, and will lower over time, 
 while always ensuring a minimum profit of minimumProfitRatio percent of the community price.
 Higher values of speed cause the price to drop faster.
+
 Formally, if CMP is the hat's community price, and BAP is the price the hat was bought at, then
-the function's value at age = 0 will be sellRatio * CMP, and the function will approach BAP + (minimumProfitRatio * CMP) as age approaches infinity.
+the function's value at age = 0 will be maxRatio * CMP, and the function will approach BAP + (profitRatio * CMP) as age approaches infinity.
 
 This implementation does not use the Backpack.tf API.
 
@@ -143,7 +144,7 @@ Parameters: none
 Accepts every hat, except those priced in a currency other than metal or keys.
 
 ### checkData
-An acceptabilityFunction which accepts a hat only if several conditions are satisfied, one for each paramter.
+An acceptabilityFunction which accepts a hat only if several conditions are satisfied, one for each parameter.
 
 Parameters:
 * minKeys: number. Checks that the hat's average value is above minKeys keys.
