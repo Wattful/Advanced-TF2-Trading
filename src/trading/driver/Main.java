@@ -20,7 +20,7 @@ import javax.imageio.IIOException;
 
 import static trading.driver.FileUtils.*;
 
-//TODO: Test custom function implementations
+//TODO:
 
 //Possible refactorings: include options on whether to base on upper, lower, or middle, messaging feature, 
 //have bot not updateandfilter on startup, fix behavior with unpriced hats
@@ -353,6 +353,10 @@ public class Main{
 		} catch(IOException e){
 			throw new UncheckedIOException(OFFER_CHECK_ARGUMENT_2 + " execution failed.", e);
 		}
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			offerManagement.destroy();
+			System.out.println("Offer checking thread exited safely.");
+		}));
 		Scanner input = new Scanner(offerManagement.getInputStream());
 		Scanner errInput = new Scanner(offerManagement.getErrorStream());
 		PrintStream output = new PrintStream(offerManagement.getOutputStream(), true);
