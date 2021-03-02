@@ -26,6 +26,8 @@ class BackpackTF implements LoggingBackpackTFConnection{
 	private IOException lastThrown;
 	private JSONObject pricesObject;
 
+	private static final int LISTINGS_LIMIT = 50;
+
 	private BackpackTF(String apiKey, String apiToken, String fallback){
 		if(apiKey == null || apiToken == null){
 			throw new NullPointerException();
@@ -97,10 +99,18 @@ class BackpackTF implements LoggingBackpackTFConnection{
 	private void sendListingsInternal(ListingCollection<? extends Listing> listings, ListingDescriptionFunction ldf) throws IOException {
 		this.used();
 		JSONArray toSend = listings.getListingRepresentation(ldf);
-		JSONObject args = new JSONObject();
-		args.put("token", this.apiToken);
-		args.put("listings", toSend);
-		JSONObject response = NetUtils.request("https://backpack.tf/api/classifieds/list/v1", "POST", args);
+		int numberOfRequests = (int)Math.ceil(((double)toSend.length())/LISTINGS_LIMIT);
+		for(int i = 0; i < numberOfRequests; i++){
+			JSONObject args = new JSONObject();
+			args.put("token", this.apiToken);
+			JSONArray listingsToSend = new JSONArray();
+			for(int j = i * LISTINGS_LIMIT; j < toSend.length() && j < (i + 1) * LISTINGS_LIMIT; j++){
+				listingsToSend.put(toSend.getJSONObject(j));
+			}
+			args.put("listings", listingsToSend);
+			JSONObject response = NetUtils.request("https://backpack.tf/api/classifieds/list/v1", "POST", args);
+		}
+		
 		//checkForError(response, "Send listings");
 		//return response;
 		/*try{
