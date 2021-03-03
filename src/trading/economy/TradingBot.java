@@ -59,8 +59,9 @@ public class TradingBot{
 	*/
 	public synchronized void sendListings(BackpackTFConnection connection) throws IOException {
 		ListingHashSet<Listing> toSend = new ListingHashSet<>(this.myHats.copy());
-		toSend.addAll(this.myListings.copy());
 		connection.sendListings(toSend, this.functions.listingDescriptionFunction);
+		ListingHashSet<Listing> toSend2 = new ListingHashSet<>(this.myListings.copy());
+		connection.sendListings(toSend2, this.functions.listingDescriptionFunction);
 	}
 
 	/**Calls recalculatePrice() on all of this bot's Hats and BuyListings using the given BackpackTFConnection.
