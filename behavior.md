@@ -23,6 +23,8 @@ Additionally, the user can write custom versions of these functions. See [config
 # Listings
 The bot automatically creates and manages its buy and sell listings, calculating the prices using the buyListingPriceFunction and sellListingPriceFunction.
 
+Upon creating a listing, the listing's price will be initially unset, and won't be calculated until all listing prices are recalculated.
+
 When recalculating listings, some price functions call the Backpack.tf API to see other listings on the same item. When recalculating prices, if a price function uses the Backpack.tf API, the bot will sleep priceUpdateSleep milliseconds (default 2500) between function calls. This is to prevent Backpack.tf API rate limiting.
 
 All prices are rounded to the nearest refined.
@@ -32,6 +34,8 @@ The bot creates buy listings for all unusual items which pass its acceptabilityF
 
 ### Sell listings
 The bot automatically creates a sell listing for any unusual item which it acquires in a trade. The prices for these sell listings are calculated using sellListingPriceFunction.
+
+Sell listings are prioritized when sending listings to Backpack.tf, ensuring that they don't get left out due to exceeding the limit on total listings.
 
 If the user wants to create sell listings for items that the bot did not automatically trade for, such as items from a manually reviewed trade, the bot can read its inventory to create listings for any unusual items that it was not previously tracking. This can be achieved using the `readitems` command.
 
