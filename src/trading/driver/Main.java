@@ -189,7 +189,7 @@ public class Main{
 	private static final Runnable userInput = () -> {
 		Scanner keyboard = new Scanner(System.in);
 		while(keyboard.hasNextLine()){
-			String normalizedInput = keyboard.nextLine();
+			String normalizedInput = keyboard.nextLine().trim();
 			String input = normalizedInput.toLowerCase();
 			if(input.equals("exit")){
 				exit();
@@ -431,7 +431,7 @@ public class Main{
 	private static void recalculate(){
 		successes = 0;
 		System.out.println("Recalculating prices for " + elonMusk.getHats().size() + " sell listings and " + elonMusk.getBuyListings().size() + " buy listings.");
-		System.out.println("(. indicates success, ' indicates failure for an inidividual listing)");
+		System.out.println("(. indicates success, ' indicates failure for an individual listing)");
 		backpackTF.resetIOException();
 		backpackTF.resetUsed();
 		elonMusk.recalculatePrices(backpackTF, callback);
