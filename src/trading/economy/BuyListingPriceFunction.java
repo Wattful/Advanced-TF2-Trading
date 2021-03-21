@@ -19,7 +19,7 @@ public interface BuyListingPriceFunction extends PriceFunction<BuyListing>{
 	@throws NullPointerException if any parameter is null.
 	@throws IllegalArgumentException if keyScrapRatio is non-positive.
 	@throws IOException the function may throw IOException to accommodate API call failures.
-	@return the price for the BuyListing.
+	@return the price for the BuyListing. A null value will leave the price unset.
 	*/
 	Price calculatePrice(BuyListing listing, BackpackTFConnection connection, int keyScrapRatio) throws IOException;
 

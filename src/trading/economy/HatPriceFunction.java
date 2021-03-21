@@ -20,7 +20,7 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 	@throws NullPointerException if h is null.
 	@throws IllegalArgumentException if keyScrapRatio is non-positive.
 	@throws IOException the function may throw IOException to accommodate API call failures.
-	@return the hat's price.
+	@return the hat's price. A null value will leave the price unset.
 	*/
 	Price calculatePrice(Hat h, BackpackTFConnection connection, int keyScrapRatio) throws IOException;
 
