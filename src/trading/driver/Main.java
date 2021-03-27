@@ -241,7 +241,12 @@ public class Main{
 			} else if(input.equals("keyscrapratio")){
 				System.out.println("Current key-to-scrap ratio is " + elonMusk.getKeyScrapRatio());
 			} else if(input.equals("numberitems")){
-				System.out.println("Bot is selling " + elonMusk.getHats().size() + " items and buying " + elonMusk.getBuyListings().size() + " items.");
+				ListingCollection<Hat> sellListings = elonMusk.getHats();
+				List<Hat> visibleSellListings = sellListings.stream().filter(h -> h.isVisible()).collect(Collectors.toList());
+				ListingCollection<BuyListing> buyListings = elonMusk.getBuyListings();
+				List<BuyListing> visibleBuyListings = buyListings.stream().filter(bl -> bl.isVisible()).collect(Collectors.toList());
+				System.out.println("Bot is selling " + sellListings.size() + " items, of which " + visibleSellListings.size() + " have prices."); 
+				System.out.println("Bot is buying " + buyListings.size() + " items, of which " + visibleBuyListings.size() + " have prices.");
 			} else if(input.startsWith("iteminfo")){
 				String toParse = normalizedInput.substring("iteminfo".length());
 				Item query;
