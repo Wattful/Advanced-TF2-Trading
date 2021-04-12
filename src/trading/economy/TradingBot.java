@@ -255,12 +255,16 @@ public class TradingBot{
 		this.pricesObject = connection.getPricesObject();
 		this.updateKeyScrapRatio();
 		for(Hat h : this.myHats){
-			JSONObject j = getHatObject(this.pricesObject, h);
-			h.changeCommunityPrice(PriceRange.fromBackpackTFRepresentation(j, this.keyScrapRatio));
+			try{
+				JSONObject j = getHatObject(this.pricesObject, h);
+				h.changeCommunityPrice(PriceRange.fromBackpackTFRepresentation(j, this.keyScrapRatio));
+			} catch(JSONException e){}
 		}
 		for(BuyListing b : this.myListings){
-			JSONObject j = getHatObject(this.pricesObject, b);
-			b.changeCommunityPrice(PriceRange.fromBackpackTFRepresentation(j, this.keyScrapRatio));
+			try{
+				JSONObject j = getHatObject(this.pricesObject, b);
+				b.changeCommunityPrice(PriceRange.fromBackpackTFRepresentation(j, this.keyScrapRatio));
+			} catch(JSONException e){}
 		}
 
 		forEachUnusual(this.pricesObject, (j, n, e) -> {
@@ -390,7 +394,8 @@ public class TradingBot{
 	}
 
 	private <T extends Listing> void recalculatePriceInternal(ListingCollection<T> l, BackpackTFConnection connection, int keyScrapRatio, PriceFunction<T> priceFunction, Consumer<? super BackpackTFConnection> callback){
-		for(T list : l){
+		HashSet<T> copiedSet = new HashSet<>(l);
+		for(T list : copiedSet){
 			synchronized(this){
 				try{
 					Price newPrice = priceFunction.calculatePrice(list, connection, keyScrapRatio);
