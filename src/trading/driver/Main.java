@@ -32,6 +32,7 @@ public class Main{
 	private static final String OFFER_CHECK_ARGUMENT_1 = "node";
 	private static final String OFFER_CHECK_ARGUMENT_2 = "nodejs/offerChecking.js";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh;mm;ss aa");
+	private static final int HEARTBEAT_SLEEP = 1800000; // 30 minutes
 
 	private static final JSONObject botInfo;
 	private static final JSONObject botSettings;
@@ -68,6 +69,7 @@ public class Main{
 	private static Thread inputThread;
 	private static Thread botThread;
 	private static Thread offerThread;
+	private static Thread heartbeatThread;
 
 	private static int successes = 0;
 	private static boolean recalculateOnStartup = false;
@@ -200,6 +202,9 @@ public class Main{
 			} else if(input.equals("getid")){
 				checkHatIDs();
 				save();
+			} else if(input.startsWith("heartbeat")){
+				heartbeat();
+				System.out.println("Heart Beat.");
 			} else if(input.startsWith("readitems")){
 				int before = elonMusk.getHats().size();
 				if(input.equals("readitems")){
@@ -433,6 +438,17 @@ public class Main{
 		throw new IllegalStateException("Native offer checking stopped unexpectedly.");
 	};
 
+	private static final Runnable heart = () -> {
+		while(true){
+			heartbeat();
+			try{
+				Thread.sleep(HEARTBEAT_SLEEP);
+			} catch(InterruptedException e){
+				throw new RuntimeException("Heartbeat sleep was interrupted.");
+			}
+		}
+	};
+
 	private static void recalculate(){
 		successes = 0;
 		System.out.println("Recalculating prices for " + elonMusk.getHats().size() + " sell listings and " + elonMusk.getBuyListings().size() + " buy listings.");
@@ -542,6 +558,15 @@ public class Main{
 		}
 	}
 
+	private static void heartbeat(){
+		try{
+			backpackTF.heartbeat();
+		} catch(IOException e){
+			log(e);
+			System.out.println("Failed to heartbeat. See " + logFile + " for more details.");
+		}
+	}
+
 	private static void checkHatIDs(){
 		try{
 			elonMusk.checkHatIDs(steam);
@@ -634,9 +659,12 @@ public class Main{
 		botThread.setUncaughtExceptionHandler(handler);
 		offerThread = new Thread(nativeOfferChecking, "Offer checking and processing");
 		offerThread.setUncaughtExceptionHandler(handler);
+		heartbeatThread = new Thread(heart, "Heartbeat thread");
+		heartbeatThread.setUncaughtExceptionHandler(handler);
 		inputThread.start();
 		offerThread.start();
 		botThread.start();
+		heartbeatThread.start();
 	}
 
 	private static void checkNodeJS(){

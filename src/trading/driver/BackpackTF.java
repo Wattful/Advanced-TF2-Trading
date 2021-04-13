@@ -110,19 +110,21 @@ class BackpackTF implements LoggingBackpackTFConnection{
 			args.put("listings", listingsToSend);
 			JSONObject response = NetUtils.request("https://backpack.tf/api/classifieds/list/v1", "POST", args);
 		}
-		
-		//checkForError(response, "Send listings");
-		//return response;
-		/*try{
-			if(response != null){
-				write(response.toString(), "./report.json");
-			}
+	}
+
+	/**Sends a heartbeat API call to Backpack.tf.
+	@throws IOException if an IO error occurs.
+	*/
+	public void heartbeat() throws IOException {
+		JSONObject args = new JSONObject();
+		args.put("token", this.apiToken);
+		args.put("automatic", "all");
+		try {
+			JSONObject response = NetUtils.request("https://backpack.tf/api/aux/heartbeat/v1", "POST", args);
 		} catch(IOException e){
-			System.out.println("Could not document response.");
-		}*/
-		/*JSONObject secondArgs = new JSONObject();
-		secondArgs.put("token", this.apiToken);
-		//request("https://backpack.tf/api/aux/heartbeat/v1", "POST", secondArgs);*/
+			this.lastThrown = e;
+			throw e;
+		}
 	}
 
 	/**Searches the backpack.tf listings for the given item and returns the result.<br>

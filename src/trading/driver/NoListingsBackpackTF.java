@@ -58,6 +58,13 @@ class NoListingsBackpackTF implements LoggingBackpackTFConnection{
 	*/
 	public void sendListings(ListingCollection<? extends Listing> listings, ListingDescriptionFunction ldf){}
 
+	/**Sends a heartbeat API call to Backpack.tf.
+	@throws IOException if an IO error occurs.
+	*/
+	public void heartbeat() throws IOException {
+		this.connection.heartbeat();
+	}
+
 	/**Searches the backpack.tf listings for the given item and returns the result.<br>
 	More specifically, it returns the result of a backpack.tf classifieds search API call as detailed at https://backpack.tf/api/docs/classifieds_search.
 	@param i The item to search for.

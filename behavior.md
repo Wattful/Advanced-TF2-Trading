@@ -83,6 +83,9 @@ The periodic actions are:
 5. Verifies that the bot has correct Steam item IDs for sell listings (as these are required to post sell listings on Backpack.tf).
 6. Sends listings to Backpack.tf.
 
+# Heartbeat
+Independently of periodic actions, the bot will send a "heartbeat" to Backpack.tf every 30 minutes. This bumps the bot's listings and enables the "thunder bolt" trade icon.
+
 # Command-line input
 During runtime, the bot accepts several command-line inputs. These inputs can be used to force the bot to perform certain actions or output information about the bot and its items.
 
@@ -90,6 +93,7 @@ Here are the commands:
 * `exit`:  Saves the bot's records and exits safely.
 * `save`:  Saves the bot's records without exiting.
 * `sendlistings`: Sends the bot's listings to Backpack.tf.
+* `heartbeat`: Sends a heartbeat to Backpack.tf (see "heartbeat")
 * `getid`:  Verifies that the bot has correct Steam item IDs for all sell listings.
 * `readitems`:  Creates sell listings for untracked unusual items in the bot's inventory. See "sell listings" section for more details.
 * `updateandfilter`: Retrieves community prices from Backpack.tf, recalculates key-to-refined ratio, and uses the bot's acceptabilityFunction to refilter its buy listings.
