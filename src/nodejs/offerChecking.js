@@ -47,10 +47,10 @@ client.on('loggedOn', () => {
   client.setPersona(SteamUser.EPersonaState.Online); //Online
   if(nextOffer !== null){
     setTimeout(() => {
-      if(nextOfferAction === false){
-        declineOffer(nextOffer);
-      } else {
+      if(nextOfferAction === true){
         acceptOffer(nextOffer);
+      } else {
+        declineOffer(nextOffer);
       }
       nextOfferAction = null;
       nextOffer = null;
