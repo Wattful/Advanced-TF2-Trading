@@ -67,6 +67,7 @@ public class Hat extends Listing{
 		j.put("name", this.getName());
 		j.put("effect", this.getEffect().getIntValue());
 		j.put("communityPrice", this.getCommunityPrice().getJSONRepresentation());
+		j.put("priority", this.getPriority());
 		return j;
 	}
 
@@ -179,6 +180,7 @@ public class Hat extends Listing{
 		if(!obj.isNull("price")) {
 			h.setPrice(Price.fromJSONRepresentation(obj.getJSONObject("price")));
 		}
+		h.setPriority((Integer)obj.getInt("priority"));
 		return h;
 	}
 

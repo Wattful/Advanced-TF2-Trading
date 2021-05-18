@@ -20,7 +20,7 @@ import javax.imageio.IIOException;
 
 import static trading.driver.FileUtils.*;
 
-//TODO:
+//TODO: Test, update documentation
 
 //Possible refactorings: include options on whether to base on upper, lower, or middle, messaging feature, 
 //have bot not updateandfilter on startup, fix behavior with unpriced hats
@@ -32,7 +32,7 @@ public class Main{
 	private static final String OFFER_CHECK_ARGUMENT_1 = "node";
 	private static final String OFFER_CHECK_ARGUMENT_2 = "nodejs/offerChecking.js";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd hh;mm;ss aa");
-	private static final int HEARTBEAT_SLEEP = 1800000; // 30 minutes
+	private static final int HEARTBEAT_SLEEP = 300000; // 5 minutes
 
 	private static final JSONObject botInfo;
 	private static final JSONObject botSettings;
@@ -242,6 +242,7 @@ public class Main{
 				new Thread(() -> {
 					recalculate();
 					save();
+					sendListings();
 				}).start();
 			} else if(input.equals("keyscrapratio")){
 				System.out.println("Current key-to-scrap ratio is " + elonMusk.getKeyScrapRatio());
@@ -306,7 +307,7 @@ public class Main{
 				}
 				for(Hat h : elonMusk.getHats()){
 					try{
-						System.out.println(h.getEffect().getName() + " " + h.getName() + ": " + h.getPrice().valueString());
+						System.out.println(h.getEffect().getName() + " " + h.getName() + ": " + h.getPrice().valueString() + ", Priority: " + h.getPriority());
 					} catch(NonVisibleListingException e){
 						System.out.println(h.getEffect().getName() + " " + h.getName() + ": Price not set yet");
 					}
@@ -317,7 +318,18 @@ public class Main{
 				}
 				for(BuyListing bl : elonMusk.getBuyListings()){
 					try{
-						System.out.println(bl.getEffect().getName() + " " + bl.getName() + ": " + bl.getPrice().valueString());
+						System.out.println(bl.getEffect().getName() + " " + bl.getName() + ": " + bl.getPrice().valueString() + ", Priority: " + bl.getPriority());
+					} catch(NonVisibleListingException e){
+						System.out.println(bl.getEffect().getName() + " " + bl.getName() + ": Price not set yet");
+					}
+				}
+			} else if(input.equals("prices")) {
+				if(elonMusk.getListings().size() == 0){
+					System.out.println("Bot is not buying or selling any items.");
+				}
+				for(Listing bl : elonMusk.getListings()){
+					try{
+						System.out.println(bl.getEffect().getName() + " " + bl.getName() + ": " + bl.getPrice().valueString() + ", Priority: " + bl.getPriority());
 					} catch(NonVisibleListingException e){
 						System.out.println(bl.getEffect().getName() + " " + bl.getName() + ": Price not set yet");
 					}

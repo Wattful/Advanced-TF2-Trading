@@ -13,16 +13,17 @@ This class contains static methods which return "default" implementations of Hat
 
 @FunctionalInterface
 public interface HatPriceFunction extends PriceFunction<Hat>{
-	/**Calulates and returns a Price for the given hat.
+	/**Calulates and returns a Price and priority for the given hat.<br>
+	Both price and priority can be nulled. A null price indicates that price should be unset, and a null priority indicates a priority lower than any other.
 	@param h The hat to consider.
 	@param connection a connection to Backpack.tf.
 	@param keyScrapRatio the key-to-scrap ratio to use for this calculation.
 	@throws NullPointerException if h is null.
 	@throws IllegalArgumentException if keyScrapRatio is non-positive.
 	@throws IOException the function may throw IOException to accommodate API call failures.
-	@return the hat's price. A null value will leave the price unset.
+	@return the hat's price and priority.
 	*/
-	Price calculatePrice(Hat h, BackpackTFConnection connection, int keyScrapRatio) throws IOException;
+	Pair<Price, Integer> calculatePrice(Hat h, BackpackTFConnection connection, int keyScrapRatio) throws IOException;
 
 	/**Returns a HatPriceFunction which uses a negative exponential function, with (age + 1) as the base and speed as the negative exponent, 
 	where age is the number of days since this hat was bought.<br>
@@ -31,7 +32,7 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 	Higher values of speed cause the price to drop faster.<br>
 	Formally, if CMP is the hat's community price, and BAP is the price the hat was bought at, then
 	the function's value at age = 0 will be sellRatio * CMP, and the function will approach BAP + (minimumProfitRatio * CMP) as age approaches infinity.<br>
-	The returned function does not use the BackpackTFConnection.
+	The returned function does not use the BackpackTFConnection, and will not return a priority.
 	@param sellRatio The maximum ratio of the base price that the hat can be sold at.
 	@param minimumProfitRatio The minimum profit that the hat will be sold at, as a ratio of the hat's base price.
 	@param speed The speed at which the price decreases.
@@ -60,12 +61,12 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 			double max = communityPrice.getDecimalPrice(keyScrapRatio) * sellRatio;
 			double base = hat.getPurchasePrice().getDecimalPrice(keyScrapRatio) + (minimumProfitRatio * communityPrice.getDecimalPrice(keyScrapRatio));
 			double value = ((max - base) * (Math.pow(age + 1, -speed))) + base;
-			return Price.calculate(value, keyScrapRatio);
+			return new Pair<>(Price.calculate(value, keyScrapRatio), null);
 		};
 	}
 
 	/**Returns a HatPriceFunction which returns the price the hat was bought at, plus profitRatio times the hat's community price.<br>
-	The returned function does not use the BackpackTFConnection.
+	The returned function does not use the BackpackTFConnection, and will not return a priority.
 	@param profitRatio the ratio above the bought at price to sell the hat.
 	@throws IllegalArgumentException if profitRatio is NaN or negative.
 	@return a HatPriceFunction which returns the price the hat was bought at, plus profitRatio times the hat's community price.
@@ -83,12 +84,12 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 		return (Hat hat, BackpackTFConnection listings, int keyScrapRatio) -> {
 			Price communityPrice = hat.getCommunityPrice().middle();
 			double value = hat.getPurchasePrice().getDecimalPrice(keyScrapRatio) + (profitRatio * communityPrice.getDecimalPrice(keyScrapRatio));
-			return Price.calculate(value, keyScrapRatio);
+			return new Pair<>(Price.calculate(value, keyScrapRatio), null);
 		};
 	}
 
 	/**Returns a HatPriceFunction which returns a fixed ratio of the hat's community price.<br>
-	The returned function does not use the BackpackTFConnection.
+	The returned function does not use the BackpackTFConnection, and will not return a priority.
 	@param ratioOfPrice the ratio to use.
 	@throws IllegalArgumentException if ratioOfPrice is NaN or non-positive.
 	@return a HatPriceFunction which returns a fixed ratio of the hat's community price.
@@ -106,7 +107,7 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 		return (Hat hat, BackpackTFConnection listings, int keyScrapRatio) -> {
 			Price communityPrice = hat.getCommunityPrice().middle();
 			double value = ratioOfPrice * communityPrice.getDecimalPrice(keyScrapRatio);
-			return Price.calculate(value, keyScrapRatio);
+			return new Pair<>(Price.calculate(value, keyScrapRatio), null);
 		};
 	}
 
@@ -114,7 +115,8 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 	then undercuts this average by undercutRatio of the hat's community price.<br>
 	In considering listings, it will ignore listings made by the bot.<br>
 	If mustProfit is true, it will never set its price lower than the price that the hat was bought for.<br>
-	If the hat has no sell listings, it will set the price to defaultRatio of the hat's community price.
+	If the hat has no sell listings, it will set the price to defaultRatio of the hat's community price.<br>
+	The returned function will not return a priority.
 	@param listingsToConsider The number of listings to average. Must be positive.
 	@param overcutRatio Ratio to undercut price by. Notice that overcutting can be done by setting this value to be negative.
 	@param defaultRatio The ratio to set a price to when no listings are found. Must be positive.
@@ -150,7 +152,7 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 			int numListings = Math.min(listingsToConsider, sellListings.length());
 
 			if(numListings == 0){
-				return communityPrice.scaleBy(defaultRatio, keyScrapRatio);
+				return new Pair<>(communityPrice.scaleBy(defaultRatio, keyScrapRatio), null);
 			}
 
 			Price[] prices = new Price[numListings];
@@ -163,9 +165,9 @@ public interface HatPriceFunction extends PriceFunction<Hat>{
 
 			Price tentativePrice = Price.average(keyScrapRatio, prices).scaleBy(1 - undercutRatio, keyScrapRatio);
 			if(tentativePrice.getDecimalPrice(keyScrapRatio) < h.getPurchasePrice().getDecimalPrice(keyScrapRatio) && mustProfit){
-				return h.getPurchasePrice();
+				return new Pair<>(h.getPurchasePrice(), null);
 			}
-			return tentativePrice;
+			return new Pair<>(tentativePrice, null);
 		};
 	}
 }
