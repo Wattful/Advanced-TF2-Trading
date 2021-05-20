@@ -111,7 +111,7 @@ public class BuyListing extends Listing{
 		PriceRange communityPrice = PriceRange.fromJSONRepresentation(input.getJSONObject("communityPrice"));
 		Price myPrice = input.isNull("price") ? null : Price.fromJSONRepresentation(input.getJSONObject("price"));
 		BuyListing bl = new BuyListing(name, effect, communityPrice, myPrice);
-		bl.setPriority((Integer)input.getInt("priority"));
+		bl.setPriority(input.has("priority") ? (Integer)input.getInt("priority") : null);
 		return bl;
 	}
 

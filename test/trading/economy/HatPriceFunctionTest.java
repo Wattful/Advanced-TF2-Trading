@@ -25,9 +25,9 @@ public class HatPriceFunctionTest {
 			}
 			return new JSONObject(SampleBackpackTFConnection.getSampleListings());
 		});
-		assertEquals(sampleFunction.calculatePrice(boughtToday, connection, 900), new Price(18, 0));
-		assertEquals(sampleFunction.calculatePrice(older, connection, 900), new Price(11, 0));
-		assertTrue(sampleFunction.calculatePrice(mid, connection, 900).compareTo(HatPriceFunction.negativeExponentialFunction(0.9, 0.1, 5.0).calculatePrice(mid, connection, 900)) > 0);
+		assertEquals(sampleFunction.calculatePrice(boughtToday, connection, 900).first(), new Price(18, 0));
+		assertTrue(sampleFunction.calculatePrice(older, connection, 900).first().compareTo(new Price(12, 0)) < 0);
+		assertTrue(sampleFunction.calculatePrice(mid, connection, 900).first().compareTo(HatPriceFunction.negativeExponentialFunction(0.9, 0.1, 5.0).calculatePrice(mid, connection, 900).first()) > 0);
 	}
 	
 	@Test
@@ -41,7 +41,7 @@ public class HatPriceFunctionTest {
 			return new JSONObject(SampleBackpackTFConnection.getSampleListings());
 		});
 		
-		assertEquals(sampleFunction.calculatePrice(sampleHat, connection, 900), new Price(11, 0));
+		assertEquals(sampleFunction.calculatePrice(sampleHat, connection, 900).first(), new Price(11, 0));
 		
 		testExpectedException(() -> {HatPriceFunction.profitByRatio(Double.NaN);}, IllegalArgumentException.class);
 		testExpectedException(() -> {HatPriceFunction.profitByRatio(Double.POSITIVE_INFINITY);}, IllegalArgumentException.class);
@@ -59,7 +59,7 @@ public class HatPriceFunctionTest {
 			return new JSONObject(SampleBackpackTFConnection.getSampleListings());
 		});
 		
-		assertEquals(sampleFunction.calculatePrice(sampleHat, connection, 180), new Price(18, 0));
+		assertEquals(sampleFunction.calculatePrice(sampleHat, connection, 180).first(), new Price(18, 0));
 		
 		testExpectedException(() -> {HatPriceFunction.fixedRatio(0.0);}, IllegalArgumentException.class);
 		SampleBackpackTFConnection sampleConnection = new SampleBackpackTFConnection((Item i) -> {throw new IOException();});
@@ -78,9 +78,9 @@ public class HatPriceFunctionTest {
 			}
 			return new JSONObject(SampleBackpackTFConnection.getSampleListings());
 		});
-		assertEquals(sampleFunction.calculatePrice(sampleHat, connection, 900), new Price(15, 46));
-		assertEquals(sampleFunction.calculatePrice(sampleHat, new SampleBackpackTFConnection((Item i) -> {return new JSONObject("{\"buy\": {\"listings\": []}, \"sell\": {\"listings\": []}}");}), 900), new Price(18, 0));
-		assertEquals(mustProfit.calculatePrice(sampleHat, connection, 900), new Price(16, 0));
+		assertEquals(sampleFunction.calculatePrice(sampleHat, connection, 900).first(), new Price(15, 46));
+		assertEquals(sampleFunction.calculatePrice(sampleHat, new SampleBackpackTFConnection((Item i) -> {return new JSONObject("{\"buy\": {\"listings\": []}, \"sell\": {\"listings\": []}}");}), 900).first(), new Price(18, 0));
+		assertEquals(mustProfit.calculatePrice(sampleHat, connection, 900).first(), new Price(16, 0));
 		
 		testExpectedException(() -> {sampleFunction.calculatePrice(new Hat("Backwards Ballcap", Effect.forName("Burning Flames"), new PriceRange(new Price(19, 0), new Price(21, 0), 180), new Price(16, 0), LocalDate.of(2021, 2, 3)), connection, 1);}, IllegalArgumentException.class);
 		

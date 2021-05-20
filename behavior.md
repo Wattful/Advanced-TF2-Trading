@@ -12,8 +12,8 @@ The bot saves a record of all its buy and sell listings as a JSON file at a user
 
 # Custom Functions
 The user can specify four custom functions which determine the bot's behavior. They are:
-1. sellListingPriceFunction: Calculates prices for sell listings
-2. buyListingPriceFunction: Calculate prices for buy listings
+1. sellListingPriceFunction: Calculates prices and priorities for sell listings
+2. buyListingPriceFunction: Calculate prices and priorities for buy listings
 3. acceptabilityFunction: Determines which items to place buy listings for (ie which ones are "acceptable")
 4. listingDescriptionFunction: Determines the description to use for a listing on Backpack.tf.
 
@@ -27,6 +27,8 @@ Upon creating a listing, the listing's price will be initially unset, and won't 
 
 When recalculating listings, some price functions call the Backpack.tf API to see other listings on the same item. When recalculating prices, if a price function uses the Backpack.tf API, the bot will sleep priceUpdateSleep milliseconds (default 2500) between function calls. This is to prevent Backpack.tf API rate limiting.
 
+Listing price recalculation is atomic, meaning that all price changes are committed at the same time. If a user sends a trade offer to the bot while it is recalculating prices, the bot will use the listing's old, pre-recalculation price. This ensures that the bot always values listings by the price displayed to the user.
+
 All prices are rounded to the nearest refined.
 
 ### Buy listings
@@ -35,11 +37,16 @@ The bot creates buy listings for all unusual items which pass its acceptabilityF
 ### Sell listings
 The bot automatically creates a sell listing for any unusual item which it acquires in a trade. The prices for these sell listings are calculated using sellListingPriceFunction.
 
-Sell listings are prioritized when sending listings to Backpack.tf, ensuring that they don't get left out due to exceeding the limit on total listings.
-
 If the user wants to create sell listings for items that the bot did not automatically trade for, such as items from a manually reviewed trade, the bot can read its inventory to create listings for any unusual items that it was not previously tracking. This can be achieved using the `readitems` command.
 
 When creating sell listings using this method, the bot does not know what price it purchased that hat for. The item's purchase price is essential to some sellListingPriceFunctions, which ensure that the item is not sold at a loss. To fill in a purchase price for these sell listings, the bot will use the defaultRatio value, specified in botSettings.json. The purchase price will be set to defaultRatio times the item's community price.
+
+### Listing priority
+In addition to returning a price, sellListingPriceFunction and buyListingPriceFunction can optionally return a priority, represented as an int. Lower integer values are considered higher priority.
+
+Listings will be sent to Backpack.tf in order of their priority. This is useful when the number of listings the bot is tracking exceeds the user's maximum number of listings on Backpack.tf.
+
+Priority is optional, and price functions can return null in place of a priority. Listings with null priority are considered lower priority than any listing with a defined priority. Sell listings will null priority are higher priority than buy listings with null priority.
 
 # Offer checking
 The bot checks offers via its Node.js component. It will check for a new offer every offerCheckSleep milliseconds (default 15000). Values lower than this may lead to mysterious Steam errors. If multiple offers are received in short succession, it will process each one in the order they were received, sleeping for offerCheckSleep milliseconds between each offer.
@@ -84,7 +91,7 @@ The periodic actions are:
 6. Sends listings to Backpack.tf.
 
 # Heartbeat
-Independently of periodic actions, the bot will send a "heartbeat" to Backpack.tf every 30 minutes. This bumps the bot's listings and enables the "thunder bolt" trade icon.
+Independently of periodic actions, the bot will send a "heartbeat" to Backpack.tf every 5 minutes. This bumps the bot's listings and enables the "thunder bolt" trade icon.
 
 # Command-line input
 During runtime, the bot accepts several command-line inputs. These inputs can be used to force the bot to perform certain actions or output information about the bot and its items.
@@ -104,6 +111,7 @@ Here are the commands:
 * `iteminfo "EFFECT" "NAME"`: Outputs all information that the bot has for the given item, as a JSONObject. Note that both the effect and name must be double quoted for this command to work.
 * `sellprices`: Outputs prices for all of the bot's sell listings.
 * `buyprices`: Outputs prices for all of the bot's buy listings.
+* `prices`: Outputs prices for all of the bot's listings.
 * `botinfo`: Outputs the bot's botInfo.json config file.
 * `botsettings`: Outputs the bot's botSettings.json config file.
 * `functions`: Outputs the bot's functions.json config file.

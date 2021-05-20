@@ -180,7 +180,7 @@ public class Hat extends Listing{
 		if(!obj.isNull("price")) {
 			h.setPrice(Price.fromJSONRepresentation(obj.getJSONObject("price")));
 		}
-		h.setPriority((Integer)obj.getInt("priority"));
+		h.setPriority(obj.has("priority") ? (Integer)obj.getInt("priority") : null);
 		return h;
 	}
 

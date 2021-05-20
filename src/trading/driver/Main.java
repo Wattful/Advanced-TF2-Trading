@@ -22,6 +22,8 @@ import static trading.driver.FileUtils.*;
 
 //TODO: Test, update documentation
 
+//TODO for priority tests: update TradingBotTest, run all tests
+
 //Possible refactorings: include options on whether to base on upper, lower, or middle, messaging feature, 
 //have bot not updateandfilter on startup, fix behavior with unpriced hats
 

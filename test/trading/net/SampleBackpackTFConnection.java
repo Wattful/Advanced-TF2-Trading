@@ -37,6 +37,10 @@ public class SampleBackpackTFConnection implements BackpackTFConnection {
 		}
 	}
 	
+	public void heartbeat() throws IOException {
+		throw new IOException();
+	}
+	
 	public static interface ListingsReturnFunction{
 		JSONObject getListings(Item i) throws IOException;
 	}

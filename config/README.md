@@ -46,7 +46,7 @@ All default implementations use the average of the Backpack.tf community price f
 ## sellListingPriceFunction
 Calculates the price of a sell listing.
 
-This function has four default implementations:
+This function has four default implementations. Note that no default implementations return a priority. The implementations are:
 
 ### fixedRatio
 Parameters:
@@ -103,7 +103,7 @@ For example, if the calculated average if 20 keys, and undercutRatio is 0.05, th
 
 ## buyListingPriceFunction
 Calculates the price of a buy listing.
-This function has four default implementations:
+This function has four default implementations. Note that no default implementations return a priority. The implementations are:
 
 ### fixedRatio
 Parameters:

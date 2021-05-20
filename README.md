@@ -16,6 +16,7 @@ This bot trades Team Fortress 2 unusual hats. It does not work for any other ste
 	* Listing prices calculated using user-defined function
 		* Multiple default price calculation functions provided, with the ability to specify custom functions
 	* Built-in under and overcutting scripts
+	* Sends listings in user-defined priority order
 * Backpack.tf integration
 	* Automatically sends listings to Backpack.tf
 	* Keeps track of community prices and key-to-refined ratio
@@ -78,8 +79,8 @@ For config file specs, see [config/README.md](config/README.md).
 
 # Custom Functions
 The user can specify four functions which determine the bot's behavior. They are:
-1. sellListingPriceFunction: Calculates prices for sell listings
-2. buyListingPriceFunction: Calculate prices for buy listings
+1. sellListingPriceFunction: Calculates prices and priorities for sell listings
+2. buyListingPriceFunction: Calculate prices and priorities for buy listings
 3. acceptabilityFunction: Determines which items to place buy listings for (ie which ones are "acceptable")
 4. listingDescriptionFunction: Determines the description to use for a listing on Backpack.tf.
 
