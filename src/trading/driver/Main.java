@@ -20,7 +20,7 @@ import javax.imageio.IIOException;
 
 import static trading.driver.FileUtils.*;
 
-//TODO: Test, update documentation
+//TODO: Update copyTest
 
 //TODO for priority tests: update TradingBotTest, run all tests
 
@@ -74,6 +74,7 @@ public class Main{
 	private static Thread heartbeatThread;
 
 	private static int successes = 0;
+	private static int failures = 0;
 	private static boolean recalculateOnStartup = false;
 
 	static {
@@ -176,6 +177,7 @@ public class Main{
 			log(ioe);
 			connection.resetIOException();
 			System.out.print("'");
+			failures++;
 		} else {
 			System.out.print(".");
 			successes++;
@@ -465,12 +467,12 @@ public class Main{
 
 	private static void recalculate(){
 		successes = 0;
+		failures = 0;
 		System.out.println("Recalculating prices for " + elonMusk.getHats().size() + " sell listings and " + elonMusk.getBuyListings().size() + " buy listings.");
 		System.out.println("(. indicates success, ' indicates failure for an individual listing)");
 		backpackTF.resetIOException();
 		backpackTF.resetUsed();
 		elonMusk.recalculatePrices(backpackTF, callback);
-		int failures = (elonMusk.getHats().size() + elonMusk.getBuyListings().size() - successes);
 		System.out.println("\nFinished recalculating prices. " + successes + " successes and " + failures + " failures.");
 		if(failures > 0){
 			System.out.println("Check " + logFile + " for details on failures.");

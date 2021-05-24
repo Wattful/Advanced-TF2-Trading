@@ -95,7 +95,9 @@ public class BuyListing extends Listing{
 	@return a deep copy of this BuyListing.
 	*/
 	public BuyListing copy(){
-		return new BuyListing(this.getName(), this.getEffect(), this.getCommunityPrice(), this.myPrice);
+		BuyListing bl = new BuyListing(this.getName(), this.getEffect(), this.getCommunityPrice(), this.myPrice);
+		bl.setPriority(this.getPriority());
+		return bl;
 	}
 
 	/**Constructs and returns a BuyListing from the given JSONObject.<br>

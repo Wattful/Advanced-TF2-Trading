@@ -141,6 +141,7 @@ public class Hat extends Listing{
 	public Hat copy(){
 		Hat h = new Hat(this.getName(), this.getEffect(), this.getCommunityPrice(), this.boughtAt, this.id, this.dateBought);
 		h.setPrice(this.myPrice);
+		h.setPriority(this.getPriority());
 		return h;
 	}
 
