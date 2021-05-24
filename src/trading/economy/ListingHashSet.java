@@ -24,36 +24,6 @@ public class ListingHashSet<E extends Listing> extends HashSet<E> implements Lis
 		super(coll);
 	}
 
-	/**Returns a JSONArray representing all listings in this ListingHashSet, suitable for storage and reconstruction.
-	@return a JSONArray representing all listings in this ListingHashSet.
-	*/
-	public JSONArray getJSONRepresentation(){
-		JSONArray answer = new JSONArray();
-		for(E entry : this){
-			answer.put(entry.getJSONRepresentation());
-		}
-		return answer;
-	}
-
-	/**Returns a JSONArray representing all listings in this ListingHashSet, suitable for sending to Backpack.tf.<br>
-	Non-visible listings will not be included in the array.
-	@param ldf Function to generate a descriptions for the listings. If ldf is null, listings will not have descriptions.
-	@return a JSONArray representing all listings in this ListingHashSet
-	*/
-	public JSONArray getListingRepresentation(ListingDescriptionFunction ldf){
-		JSONArray answer = new JSONArray();
-		for(E entry : this){
-			try{
-				JSONObject obj = entry.getListingRepresentation();
-				if(ldf != null){
-					obj.put("details", ldf.generateDescription(entry));
-				}
-				answer.put(obj);
-			} catch(NonVisibleListingException e){}
-		}
-		return answer;
-	}
-
 	/**Returns a ListingHashSet of Hat constructed from the given JSONArray of Hat JSON representations.
 	@param input the Hat JSON array
 	@throws NullPointerException if any parameter is null
@@ -92,35 +62,6 @@ public class ListingHashSet<E extends Listing> extends HashSet<E> implements Lis
 			}
 		}
 		return answer;
-	}
-
-	/**Returns a deep copy of this ListingHashSet.
-	@return a deep copy of this ListingHashSet.
-	*/
-	@SuppressWarnings("unchecked")
-	public ListingHashSet<E> copy(){
-		ListingHashSet<E> answer = new ListingHashSet<>();
-		for(E item : this){
-			answer.add((E)item.copy());
-		}
-		return answer;
-	}
-
-	/**Returns a Listing in this ListingHashSet which represents the same item as the given Item, or null if no such Listing exists.
-	@param item The item to search for.
-	@return a Listing in this Collection which represents the same item as the given Item.
-	*/
-	public E get(Item item){
-		if(item == null){
-			return null;
-		}
-		//O(n) ugly
-		for(E t : this){
-			if(item.equals(t)){
-				return t;
-			}
-		}
-		return null;
 	}
 	
 	@Override

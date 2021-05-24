@@ -25,6 +25,12 @@ public class ListingTest {
 	}
 	
 	@Test
+	public void testGetPriority() {
+		sample.setPriority(11);
+		assertEquals(sample.getPriority(), (Integer)11);
+	}
+	
+	@Test
 	public void testCommunityPriceFunctions() {
 		assertEquals(sample.getCommunityPrice(), new PriceRange(new Price(10, 0), new Price(15, 0), 180));
 		Listing changeling = new SampleListing("Cool Cat Cardigan", Effect.forName("Burning Flames"), new PriceRange(new Price(10, 0), new Price(15, 0), 180));

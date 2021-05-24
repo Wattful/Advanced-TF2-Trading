@@ -21,11 +21,11 @@ public class BuyListingPriceFunctionTest {
 			}
 			return new JSONObject(SampleBackpackTFConnection.getSampleListings());
 		});
-		assertEquals(sampleFunction.calculatePrice(sampleListing, connection, 900), new Price(15, 41));
-		assertEquals(sampleFunction.calculatePrice(sampleListing, new SampleBackpackTFConnection((Item i) -> {return new JSONObject("{\"buy\": {\"listings\": []}, \"sell\": {\"listings\": []}}");}), 900), new Price(12, 0));
+		assertEquals(sampleFunction.calculatePrice(sampleListing, connection, 900).first(), new Price(15, 41));
+		assertEquals(sampleFunction.calculatePrice(sampleListing, new SampleBackpackTFConnection((Item i) -> {return new JSONObject("{\"buy\": {\"listings\": []}, \"sell\": {\"listings\": []}}");}), 900).first(), new Price(12, 0));
 		
 		BuyListingPriceFunction lowMaxRatio = BuyListingPriceFunction.overcutByRatio(2, 0.05, 0.7, 0.5, "B");
-		assertEquals(lowMaxRatio.calculatePrice(sampleListing, connection, 900), new Price(14, 0));
+		assertEquals(lowMaxRatio.calculatePrice(sampleListing, connection, 900).first(), new Price(14, 0));
 		
 		testExpectedException(() -> {sampleFunction.calculatePrice(new BuyListing("Backwards Ballcap", Effect.forName("Burning Flames"), new PriceRange(new Price(19, 0), new Price(21, 0), 180)), connection, 1);}, IllegalArgumentException.class);
 		
@@ -52,7 +52,7 @@ public class BuyListingPriceFunctionTest {
 			return new JSONObject(SampleBackpackTFConnection.getSampleListings());
 		});
 		
-		assertEquals(sampleFunction.calculatePrice(sampleListing, connection, 180), new Price(18, 0));
+		assertEquals(sampleFunction.calculatePrice(sampleListing, connection, 180).first(), new Price(18, 0));
 		
 		testExpectedException(() -> {BuyListingPriceFunction.fixedRatio(0.0);}, IllegalArgumentException.class);
 		SampleBackpackTFConnection sampleConnection = new SampleBackpackTFConnection((Item i) -> {throw new IOException();});

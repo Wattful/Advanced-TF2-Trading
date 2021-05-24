@@ -12,22 +12,24 @@ This interface contains static methods which return "default" implementations of
 
 @FunctionalInterface
 public interface BuyListingPriceFunction extends PriceFunction<BuyListing>{
-	/**Calculates the price of the BuyListing given the listing and the Backpack.tf listings for the unusual hat.
+	/**Calculates the price and priority of the BuyListing given the listing and the Backpack.tf listings for the unusual hat.<br>
+	Both price and priority can be nulled. A null price indicates that price should be unset, and a null priority indicates a priority lower than any other.
 	@param listing the listing to calculate for.
 	@param connection a connection to Backpack.tf.
 	@param keyScrapRatio the key-to-scrap ratio to use for this calculation.
 	@throws NullPointerException if any parameter is null.
 	@throws IllegalArgumentException if keyScrapRatio is non-positive.
 	@throws IOException the function may throw IOException to accommodate API call failures.
-	@return the price for the BuyListing. A null value will leave the price unset.
+	@return the price and priority for the BuyListing.
 	*/
-	Price calculatePrice(BuyListing listing, BackpackTFConnection connection, int keyScrapRatio) throws IOException;
+	Pair<Price, Integer> calculatePrice(BuyListing listing, BackpackTFConnection connection, int keyScrapRatio) throws IOException;
 
 	/**Returns a BuyListingPriceFunction which takes the average of the first listingsToConsider buy listings for a hat on Backpack.tf, 
 	then overcuts this average by overcutRatio of the hat's community price.<br>
 	In considering listings, it will ignore listings made by the bot, as well as listings which do not list a specific unusual effect.<br>
 	Additionally, it will never set a price higher than maxRatio of the hat's community price, 
-	and if the hat has no buy listings, it will set the price to defaultRatio of the hat's community price.
+	and if the hat has no buy listings, it will set the price to defaultRatio of the hat's community price.<br>
+	This function does not return a priority.
 	@param listingsToConsider The number of listings to average. Must be positive.
 	@param overcutRatio Ratio to overcut price by. Notice that undercutting can be done by setting this value to be negative.
 	@param maxRatio The maximum ratio to set a price to. Must be positive
@@ -66,7 +68,7 @@ public interface BuyListingPriceFunction extends PriceFunction<BuyListing>{
 			int numListings = Math.min(listingsToConsider, buyListings.length());
 
 			if(numListings == 0){
-				return communityPrice.scaleBy(defaultRatio, keyScrapRatio);
+				return new Pair<>(communityPrice.scaleBy(defaultRatio, keyScrapRatio), null);
 			}
 
 			Price[] prices = new Price[numListings];
@@ -79,14 +81,14 @@ public interface BuyListingPriceFunction extends PriceFunction<BuyListing>{
 
 			Price tentativePrice = Price.average(keyScrapRatio, prices).scaleBy(overcutRatio + 1.0, keyScrapRatio);
 			if(tentativePrice.getDecimalPrice(keyScrapRatio)/communityPrice.getDecimalPrice(keyScrapRatio) > maxRatio){
-				return Price.calculate(communityPrice.getDecimalPrice(keyScrapRatio) * maxRatio, keyScrapRatio);
+				return new Pair<>(Price.calculate(communityPrice.getDecimalPrice(keyScrapRatio) * maxRatio, keyScrapRatio), null);
 			}
-			return tentativePrice;
+			return new Pair<>(tentativePrice, null);
 		};
 	}
 
 	/**Returns a BuyListingPriceFunction which returns a fixedratio of the hat's community price.<br>
-	The returned function does not use the BackpackTFConnection.
+	The returned function does not use the BackpackTFConnection, and will not return a priority.
 	@param ratioOfPrice ratio of hat's community price to set price to.
 	@throws IllegalArgumentException if ratioOfPrice is non-positive, infinite, or NaN.
 	@return the described BuyListingPriceFunction.
@@ -102,7 +104,7 @@ public interface BuyListingPriceFunction extends PriceFunction<BuyListing>{
 			throw new IllegalArgumentException("ratioOfPrice was non-positive.");
 		}
 		return (BuyListing bl, BackpackTFConnection listings, int keyScrapRatio) -> {
-			return bl.getCommunityPrice().middle().scaleBy(ratioOfPrice, keyScrapRatio);
+			return new Pair<>(bl.getCommunityPrice().middle().scaleBy(ratioOfPrice, keyScrapRatio), null);
 		};
 	}
 }

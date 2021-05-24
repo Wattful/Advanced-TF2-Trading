@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.lang.Integer;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +19,8 @@ import trading.net.BackpackTFConnection;
 import trading.net.SampleBackpackTFConnection;
 import trading.net.SampleSteamConnection;
 import trading.net.SteamConnection;
+
+// Currently untested: atomicity of recalculatePrice(), that listings are sent in priority order
 
 public class TradingBotTest {
 	private static final String steamID = "Halobot";

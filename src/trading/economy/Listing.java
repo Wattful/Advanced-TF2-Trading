@@ -12,11 +12,13 @@ Subclasses should include a constructor or method which takes in a JSONObject an
 This class stores the community price of a hat as a PriceRange object. Subclasses must provide a method to return the bot's price for the listing.<br>
 Listings can be marked as "non-visible", indicating that it is not ready to be sent as a listing, for reasons such as an uninitialized price or missing ID.<br>
 Calling getListingRepresentation() or getPrice() on a non-visible listing will throw NonVisibleListingException.
-Subclasses are responsible for tracking and setting visibility.
+Subclasses are responsible for tracking and setting visibility.<br>
+Finally, listings keep track of a nullable priority value.<br>
 */
 
 public abstract /*sealed*/ class Listing extends Item /*permits BuyListing, Hat*/{
 	private PriceRange range;
+	private Integer priority;
 
 	/**Constructs a Listing with the given values.
 	@param name the hat's name.
@@ -78,6 +80,14 @@ public abstract /*sealed*/ class Listing extends Item /*permits BuyListing, Hat*
 	@return a Price object representing the bot's price for this listing.
 	*/
 	public abstract Price getPrice() throws NonVisibleListingException;
+
+	public void setPriority(Integer priority){
+		this.priority = priority;
+	}
+
+	public Integer getPriority(){
+		return this.priority;
+	}
 
 	/**Returns a deep copy of this Listing.
 	@return a deep copy of this Listing.

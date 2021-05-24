@@ -42,6 +42,7 @@ public class BuyListing extends Listing{
 		j.put("name", this.getName());
 		j.put("effect", this.getEffect().getIntValue());
 		j.put("communityPrice", this.getCommunityPrice().getJSONRepresentation());
+		j.put("priority", this.getPriority());
 		return j;
 	}
 
@@ -94,7 +95,9 @@ public class BuyListing extends Listing{
 	@return a deep copy of this BuyListing.
 	*/
 	public BuyListing copy(){
-		return new BuyListing(this.getName(), this.getEffect(), this.getCommunityPrice(), this.myPrice);
+		BuyListing bl = new BuyListing(this.getName(), this.getEffect(), this.getCommunityPrice(), this.myPrice);
+		bl.setPriority(this.getPriority());
+		return bl;
 	}
 
 	/**Constructs and returns a BuyListing from the given JSONObject.<br>
@@ -109,7 +112,9 @@ public class BuyListing extends Listing{
 		Effect effect = Effect.forInt(input.getInt("effect"));
 		PriceRange communityPrice = PriceRange.fromJSONRepresentation(input.getJSONObject("communityPrice"));
 		Price myPrice = input.isNull("price") ? null : Price.fromJSONRepresentation(input.getJSONObject("price"));
-		return new BuyListing(name, effect, communityPrice, myPrice);
+		BuyListing bl = new BuyListing(name, effect, communityPrice, myPrice);
+		bl.setPriority(input.has("priority") ? (Integer)input.getInt("priority") : null);
+		return bl;
 	}
 
 	//Redetermines this hat's visibility.

@@ -7,7 +7,7 @@ import java.util.*;
 import java.time.*;
 import java.util.function.*;
 
-//TODO:
+//TODO: Sort before sending to TF
 
 /**Class representing a trading bot. This class keeps track of all Hats that are in the bot's inventory, as well as all BuyListings that the bot wants to buy, 
 and a Backpack.tf prices object.
@@ -20,6 +20,21 @@ public class TradingBot{
 	private volatile ListingCollection<BuyListing> myListings;
 	private volatile JSONObject pricesObject;
 	private volatile int keyScrapRatio;
+	
+	private static final Comparator<Listing> orderByPriority = (Listing listing1, Listing listing2) -> {
+		Integer priority1 = listing1.getPriority();
+		Integer priority2 = listing2.getPriority();
+		if(priority1 == null && priority2 == null){
+			if(listing1 instanceof Hat != listing2 instanceof Hat){
+				return listing1 instanceof Hat ? -1 : 1;
+			} else {
+				return 0;
+			}
+		} else if(priority1 == null || priority2 == null){
+			return priority1 == null ? 1 : -1;
+		}
+		return priority1 - priority2;
+	};
 
 	private TradingBot(String botID, BackpackTFConnection connection, FunctionSuite functions, ListingCollection<Hat> hats, ListingCollection<BuyListing> listings) throws IOException{
 		if(botID == null || functions == null || connection == null){
@@ -32,18 +47,32 @@ public class TradingBot{
 		this.updateAndFilter(connection);
 	}
 
-	/**Returns this TradingBot's Hats.
+	/**Returns this TradingBot's Hats. The returned collection's iterators will iterate in order of priority.
 	@return this TradingBot's Hats.
 	*/
 	public synchronized ListingCollection<Hat> getHats(){
-		return this.myHats.copy();
+		ListingList<Hat> list = new ListingList<>(this.myHats.copy());
+		list.sort(orderByPriority);
+		return list;
 	}
 
-	/**Returns this TradingBot's BuyListings.
+	/**Returns this TradingBot's BuyListings. The returned collection's iterators will iterate in order of priority.
 	@return this TradingBot's BuyListings.
 	*/
 	public synchronized ListingCollection<BuyListing> getBuyListings(){
-		return this.myListings.copy();
+		ListingList<BuyListing> list = new ListingList<>(this.myListings.copy());
+		list.sort(orderByPriority);
+		return list;
+	}
+
+	/**Returns all of this TradingBot's Listings. The returned collection's iterators will iterate in order of priority.
+	@return all of this TradingBot's Listings.
+	*/
+	public synchronized ListingCollection<Listing> getListings(){
+		ListingList<Listing> list = new ListingList<>(this.myHats.copy());
+		list.addAll(this.myListings.copy());
+		list.sort(orderByPriority);
+		return list;
 	}
 
 	/**Returns the key-to-scrap ratio that this TradingBot is currently using.
@@ -58,10 +87,7 @@ public class TradingBot{
 	@throws NullPointerException if connection is null.
 	*/
 	public synchronized void sendListings(BackpackTFConnection connection) throws IOException {
-		ListingHashSet<Listing> toSend = new ListingHashSet<>(this.myHats.copy());
-		connection.sendListings(toSend, this.functions.listingDescriptionFunction);
-		ListingHashSet<Listing> toSend2 = new ListingHashSet<>(this.myListings.copy());
-		connection.sendListings(toSend2, this.functions.listingDescriptionFunction);
+		connection.sendListings(this.getListings(), this.functions.listingDescriptionFunction);
 	}
 
 	/**Calls recalculatePrice() on all of this bot's Hats and BuyListings using the given BackpackTFConnection.
@@ -80,8 +106,9 @@ public class TradingBot{
 	@throws NullPointerException if connection is null.
 	*/
 	public void recalculatePrices(BackpackTFConnection connection, Consumer<? super BackpackTFConnection> callback){
-		this.recalculatePriceInternal(this.myHats, connection, this.keyScrapRatio, this.functions.hatPriceFunction, callback);
-		this.recalculatePriceInternal(this.myListings, connection, this.keyScrapRatio, this.functions.buyListingPriceFunction, callback);
+		ListingCollection<Hat> newHats = this.recalculatePriceInternal(this.myHats, connection, this.keyScrapRatio, this.functions.hatPriceFunction, callback);
+		this.myListings = this.recalculatePriceInternal(this.myListings, connection, this.keyScrapRatio, this.functions.buyListingPriceFunction, callback);
+		this.myHats = newHats;
 	}
 
 	/**Constructs, evaluates, and returns a TradeOffer from the given data.<br>
@@ -393,19 +420,25 @@ public class TradingBot{
 		return "trading.economy.TradingBot: ID: " + this.myID;
 	}
 
-	private <T extends Listing> void recalculatePriceInternal(ListingCollection<T> l, BackpackTFConnection connection, int keyScrapRatio, PriceFunction<T> priceFunction, Consumer<? super BackpackTFConnection> callback){
+	@SuppressWarnings("unchecked")
+	private <T extends Listing> ListingCollection<T> recalculatePriceInternal(ListingCollection<T> l, BackpackTFConnection connection, int keyScrapRatio, PriceFunction<T> priceFunction, Consumer<? super BackpackTFConnection> callback){
 		HashSet<T> copiedSet = new HashSet<>(l);
+		ListingHashSet<T> newQueue = new ListingHashSet<>();
 		for(T list : copiedSet){
 			synchronized(this){
 				try{
-					Price newPrice = priceFunction.calculatePrice(list, connection, keyScrapRatio);
-					list.setPrice(newPrice);
+					list = (T)list.copy();
+					Pair<Price, Integer> newPrice = priceFunction.calculatePrice(list, connection, keyScrapRatio);
+					list.setPrice(newPrice.first());
+					list.setPriority(newPrice.second());
+					newQueue.add(list);
 				} catch(IOException e){} //This is not great, but acceptable because callback function should log any errors.
 			}
 			if(callback != null){
 				callback.accept(connection);
 			}
 		}
+		return newQueue;
 	}
 
 	private static JSONObject getHatObject(JSONObject pricesObject, Item l){
