@@ -44,7 +44,7 @@ Each specified function has two keys:
 All default implementations use the average of the Backpack.tf community price for their calculations.
 
 ## sellListingPriceFunction
-Calculates the price of a sell listing.
+Calculates the price and priority of a sell listing.
 
 This function has four default implementations. Note that no default implementations return a priority. The implementations are:
 
@@ -99,11 +99,11 @@ In considering listings, it will ignore listings made by the bot itself.
 If mustProfit is true, it will never set its price lower than the price that the hat was bought for.
 If there are no other sell listings for the hat, it will set the price to defaultRatio times the hat's community price.
 
-For example, if the calculated average if 20 keys, and undercutRatio is 0.05, then the hat's price will be set to 19 keys.
+For example, if the calculated average is 20 keys, and undercutRatio is 0.05, then the hat's price will be set to 19 keys.
 
 ## buyListingPriceFunction
-Calculates the price of a buy listing.
-This function has four default implementations. Note that no default implementations return a priority. The implementations are:
+Calculates the price and priority of a buy listing.
+This function has two default implementations. Note that no default implementations return a priority. The implementations are:
 
 ### fixedRatio
 Parameters:
@@ -129,7 +129,7 @@ In considering listings, it will ignore listings made by the bot itself.
 It will never make a listing for greater than maxRatio times the item's community price.
 If there are no other sell listings for the item, it will set the price to defaultRatio times the its community price.
 
-For example, if the calculated average if 20 keys, and overcutRatio is 0.05, then the item will be bought at 21 keys.
+For example, if the calculated average is 20 keys, and overcutRatio is 0.05, then the item will be bought at 21 keys.
 
 ## acceptabilityFunction
 Determines which unusual items the bot will make a buy listing for.
