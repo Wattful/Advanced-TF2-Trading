@@ -7,7 +7,7 @@ import java.util.*;
 import java.time.*;
 import java.util.function.*;
 
-//TODO: Sort before sending to TF
+//TODO:
 
 /**Class representing a trading bot. This class keeps track of all Hats that are in the bot's inventory, as well as all BuyListings that the bot wants to buy, 
 and a Backpack.tf prices object.
@@ -436,6 +436,19 @@ public class TradingBot{
 			}
 			if(callback != null){
 				callback.accept(connection);
+			}
+		}
+		//Adjusts the sets to account for any trades which occurred while prices were being recalculated.
+		synchronized(this){
+			for(T list : l){
+				if(!newQueue.contains(list)){
+					newQueue.add(list);
+				}
+			}
+			for(T list : newQueue){
+				if(!l.contains(list)){
+					newQueue.remove(list);
+				}
 			}
 		}
 		return newQueue;
